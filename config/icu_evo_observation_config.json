@@ -1,0 +1,61 @@
+{
+  "window_minutes": 30,
+  "vital_sanity_ranges": {
+    "heart_rate_bpm": [20, 250],
+    "resp_rate_per_min": [2, 80],
+    "spo2_percent": [20, 100],
+    "sbp_mmhg": [30, 300],
+    "dbp_mmhg": [10, 200],
+    "map_mmhg": [20, 220],
+    "temperature_c": [26, 46]
+  },
+  "trend_vitals": [
+    {
+      "canonical_name": "heart_rate_bpm",
+      "sources": ["Heart Rate, bpm", "Heart Rate"]
+    },
+    {
+      "canonical_name": "resp_rate_per_min",
+      "sources": ["Respiratory Rate, insp/min", "Respiratory Rate"]
+    },
+    {
+      "canonical_name": "spo2_percent",
+      "sources": ["O2 saturation pulseoxymetry, %", "O2 saturation"]
+    },
+    {
+      "canonical_name": "sbp_mmhg",
+      "sources": [
+        "Non Invasive Blood Pressure systolic, mmHg",
+        "Arterial Blood Pressure systolic, mmHg",
+        "ART BP Systolic, mmHg",
+        "Blood Pressure systolic"
+      ]
+    },
+    {
+      "canonical_name": "dbp_mmhg",
+      "sources": [
+        "Non Invasive Blood Pressure diastolic, mmHg",
+        "Arterial Blood Pressure diastolic, mmHg",
+        "ART BP Diastolic, mmHg",
+        "Blood Pressure diastolic"
+      ]
+    },
+    {
+      "canonical_name": "map_mmhg",
+      "sources": [
+        "Non Invasive Blood Pressure mean, mmHg",
+        "Arterial Blood Pressure mean, mmHg",
+        "ART BP Mean, mmHg"
+      ]
+    },
+    {
+      "canonical_name": "temperature_c",
+      "sources": [
+        "Temperature Fahrenheit, °F",
+        "Temperature Fahrenheit",
+        "Temperature Celsius, °C"
+      ],
+      "normalize_to": "degC"
+    }
+  ]
+}

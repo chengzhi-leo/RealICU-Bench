@@ -1,2 +1,14 @@
 .DS_Store
 **/.DS_Store
+.env
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+experiment_results/
+evaluation_results/
+logs/
+tmp/

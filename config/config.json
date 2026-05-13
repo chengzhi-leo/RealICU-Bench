@@ -1,0 +1,31 @@
+{
+  "data": {
+    "events_path": "data/mimic-demo/events",
+    "icu_stay_path": "data/mimic-demo/icu_stay"
+  },
+  "data_loading": {
+    "agent_observation_hours": null
+  },
+  "agent_time_windows": {
+    "current_window_hours": 0.5,
+    "include_pre_icu_data": true,
+    "use_discharge_summary_for_history": true,
+    "num_discharge_summaries": 2,
+    "pre_icu_history_hours": 48
+  },
+  "llm": {
+    "provider": "google",
+    "model": "qwen/qwen3-235b-a22b-instruct-2507-maas",
+    "temperature": 0,
+    "max_tokens": 4096,
+    "max_input_tokens": 190000
+  },
+  "icu_evo": {
+    "max_working_windows": 3,
+    "max_insights": 10,
+    "max_trajectory_entries": 96,
+    "episode_block_windows": 12,
+    "insight_block_windows": 24,
+    "observation_config_path": "config/icu_evo_observation_config.json"
+  }
+}
