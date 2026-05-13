@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta name="title" content="RealICU: Do LLM Agents Understand Long-Context ICU Data? - Shen et al.">
+  <meta name="description" content="RealICU is a hindsight-annotated benchmark for evaluating LLMs under realistic ICU conditions, with labels from senior physician review of full patient trajectories. NeurIPS 2026.">
+  <meta name="keywords" content="ICU benchmark, LLM evaluation, clinical AI, hindsight annotation, MIMIC-IV, patient safety, medical AI, NeurIPS 2026, ICU decision support">
+  <meta name="author" content="Chengzhi Shen, Weixiang Shen, Tobias Susetzky, Chen (Cherise) Chen, Jun Li, Yuyuan Liu, Xuepeng Zhang, Zhenyu Gong, Daniel Rueckert, Jiazhen Pan">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Technical University of Munich">
+  <meta property="og:title" content="RealICU: Do LLM Agents Understand Long-Context ICU Data?">
+  <meta property="og:description" content="RealICU is a hindsight-annotated benchmark for evaluating LLMs under realistic ICU conditions. NeurIPS 2026.">
+  <meta property="og:url" content="https://realicu-benchmark.github.io">
+  <meta property="og:image" content="https://realicu-benchmark.github.io/static/images/agent.png">
+  <meta property="og:image:alt" content="RealICU Benchmark - Research Preview">
+  <meta property="article:published_time" content="2026-01-01T00:00:00.000Z">
+  <meta property="article:author" content="Chengzhi Shen">
+  <meta property="article:section" content="Research">
+  <meta property="article:tag" content="ICU benchmark">
+  <meta property="article:tag" content="LLM evaluation">
+  <meta property="article:tag" content="clinical AI">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RealICU: Do LLM Agents Understand Long-Context ICU Data?">
+  <meta name="twitter:description" content="RealICU is a hindsight-annotated benchmark for evaluating LLMs under realistic ICU conditions. NeurIPS 2026.">
+  <meta name="twitter:image" content="https://realicu-benchmark.github.io/static/images/agent.png">
+
+  <meta name="citation_title" content="RealICU: Do LLM Agents Understand Long-Context ICU Data? A Benchmark Beyond Behavior Imitation">
+  <meta name="citation_author" content="Shen, Chengzhi">
+  <meta name="citation_author" content="Shen, Weixiang">
+  <meta name="citation_author" content="Susetzky, Tobias">
+  <meta name="citation_author" content="Chen, Chen (Cherise)">
+  <meta name="citation_author" content="Li, Jun">
+  <meta name="citation_author" content="Liu, Yuyuan">
+  <meta name="citation_author" content="Zhang, Xuepeng">
+  <meta name="citation_author" content="Gong, Zhenyu">
+  <meta name="citation_author" content="Rueckert, Daniel">
+  <meta name="citation_author" content="Pan, Jiazhen">
+  <meta name="citation_publication_date" content="2026">
+  <meta name="citation_conference_title" content="Advances in Neural Information Processing Systems (NeurIPS 2026)">
+
+  <meta name="theme-color" content="#2563eb">
+  <meta name="msapplication-TileColor" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://ajax.googleapis.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+  <title>RealICU: Do LLM Agents Understand Long-Context ICU Data? | NeurIPS 2026</title>
+  <link rel="icon" href="data:,">
+
+
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+
+  <noscript>
+    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  </noscript>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/bulma-carousel.min.js"></script>
+  <script defer src="static/js/bulma-slider.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "RealICU: Do LLM Agents Understand Long-Context ICU Data? A Benchmark Beyond Behavior Imitation",
+    "description": "RealICU is a hindsight-annotated benchmark for evaluating large language models under realistic ICU conditions, with labels produced by senior physicians reviewing full patient trajectories.",
+    "author": [
+      { "@type": "Person", "name": "Chengzhi Shen", "affiliation": { "@type": "Organization", "name": "Technical University of Munich" } },
+      { "@type": "Person", "name": "Weixiang Shen", "affiliation": { "@type": "Organization", "name": "Technical University of Munich" } },
+      { "@type": "Person", "name": "Tobias Susetzky", "affiliation": { "@type": "Organization", "name": "Technical University of Munich" } },
+      { "@type": "Person", "name": "Chen (Cherise) Chen", "affiliation": { "@type": "Organization", "name": "University of Sheffield" } },
+      { "@type": "Person", "name": "Jun Li", "affiliation": { "@type": "Organization", "name": "Technical University of Munich" } },
+      { "@type": "Person", "name": "Yuyuan Liu", "affiliation": { "@type": "Organization", "name": "University of Oxford" } },
+      { "@type": "Person", "name": "Xuepeng Zhang", "affiliation": { "@type": "Organization", "name": "Zhongshan Hospital Fudan University" } },
+      { "@type": "Person", "name": "Zhenyu Gong", "affiliation": { "@type": "Organization", "name": "Sun Yat-sen University Cancer Center" } },
+      { "@type": "Person", "name": "Daniel Rueckert", "affiliation": { "@type": "Organization", "name": "Technical University of Munich" } },
+      { "@type": "Person", "name": "Jiazhen Pan", "affiliation": { "@type": "Organization", "name": "Technical University of Munich" } }
+    ],
+    "datePublished": "2026-01-01",
+    "publisher": { "@type": "Organization", "name": "Advances in Neural Information Processing Systems (NeurIPS)" },
+    "keywords": ["ICU benchmark", "LLM evaluation", "clinical AI", "hindsight annotation", "MIMIC-IV", "patient safety", "medical AI"],
+    "abstract": "Intensive care units (ICU) generate long, dense and evolving streams of clinical information, where physicians must repeatedly reassess patient states under time pressure. We introduce RealICU, a hindsight-annotated benchmark for evaluating LLMs under realistic ICU conditions.",
+    "isAccessibleForFree": true,
+    "license": "https://creativecommons.org/licenses/by/4.0/"
+  }
+  </script>
+
+  <style>
+    .task-card {
+      background: var(--background-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-lg);
+      padding: 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+      height: 100%;
+    }
+    .task-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary-color);
+    }
+    .task-card .task-icon {
+      font-size: var(--text-stat);
+      margin-bottom: 1rem;
+    }
+    .task-card h3 {
+      font-weight: 700;
+      font-size: var(--text-lg);
+      margin-bottom: 0.75rem;
+      color: var(--text-primary);
+    }
+    .task-card p {
+      font-size: var(--text-base);
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .dataset-card {
+      background: var(--background-primary);
+      border: 2px solid var(--border-color);
+      border-radius: var(--border-radius-lg);
+      padding: 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+      height: 100%;
+    }
+    .dataset-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary-color);
+    }
+    .dataset-card h3 {
+      font-weight: 700;
+      font-size: var(--text-xl);
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+    .stat-number {
+      font-size: var(--text-stat);
+      font-weight: 800;
+      color: var(--primary-color);
+      line-height: 1.1;
+    }
+    .stat-label {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+      font-weight: 500;
+    }
+    .stat-block {
+      margin-bottom: 1rem;
+    }
+    .failure-mode-card {
+      background: linear-gradient(135deg, #fef2f2, #fee2e2);
+      border: 1px solid #fca5a5;
+      border-left: 4px solid #ef4444;
+      border-radius: var(--border-radius);
+      padding: 1.5rem 2rem;
+      margin-bottom: 1.25rem;
+    }
+    .failure-mode-card h4 {
+      font-weight: 700;
+      color: #991b1b;
+      margin-bottom: 0.5rem;
+      font-size: var(--text-lg);
+    }
+    .failure-mode-card p {
+      color: #7f1d1d;
+      font-size: var(--text-base);
+      line-height: 1.7;
+      margin: 0;
+    }
+    .contribution-item {
+      display: flex;
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+      align-items: flex-start;
+    }
+    .contribution-number {
+      background: var(--primary-color);
+      color: white;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: var(--text-base);
+      flex-shrink: 0;
+      box-shadow: var(--shadow-md);
+    }
+    .contribution-content h4 {
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: var(--text-primary);
+      font-size: var(--text-lg);
+    }
+    .contribution-content p {
+      color: var(--text-secondary);
+      font-size: var(--text-base);
+      line-height: 1.7;
+      margin: 0;
+    }
+    .teaser-figure {
+      width: 100%;
+      display: block;
+      margin: 0.5rem auto;
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--border-color);
+    }
+    .section-subtitle {
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 2.5rem;
+      font-size: var(--text-lg);
+      line-height: 1.7;
+    }
+    .results-table {
+      background: var(--background-primary);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    .results-table table {
+      margin: 0;
+    }
+    .results-table th {
+      background: var(--background-accent);
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: var(--text-sm);
+    }
+    .results-table td {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+    .results-table tr.best-row td {
+      background: #f0fdf4;
+      font-weight: 600;
+      color: #166534;
+    }
+    .highlight-badge {
+      display: inline-block;
+      background: var(--background-accent);
+      color: var(--primary-color);
+      font-weight: 700;
+      font-size: var(--text-sm);
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      margin: 0.2rem;
+      border: 1px solid var(--border-color);
+    }
+    /* Lightbox */
+    .lightbox-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      padding: 1.5rem;
+    }
+    .lightbox-overlay.active {
+      display: flex;
+    }
+    .lightbox-overlay img {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: var(--border-radius);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+      cursor: default;
+      object-fit: contain;
+    }
+    .lightbox-close {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.5rem;
+      color: white;
+      font-size: 2rem;
+      line-height: 1;
+      cursor: pointer;
+      background: none;
+      border: none;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+    .lightbox-close:hover { opacity: 1; }
+    figure img, .results-carousel img, .teaser-figure { cursor: zoom-in; }
+    .img-slider figure img { cursor: default; }
+
+    /* ── ICU-Evo Pipeline ── */
+    .pipeline-grid,
+    .pipeline-drop-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+      gap: 0 0.75rem;
+    }
+    .pipeline-grid { align-items: stretch; }
+    .pipeline-drop-row { height: 2.5rem; }
+
+    .pipeline-step {
+      background: var(--background-primary);
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--border-radius-lg);
+      padding: 1.25rem 0.875rem;
+      text-align: center;
+      transition: var(--transition);
+    }
+    .pipeline-step:hover {
+      border-color: var(--primary-color);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .pipeline-step .agent-icon { font-size: 1.75rem; margin-bottom: 0.4rem; }
+    .pipeline-step h4 {
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.4rem;
+    }
+    .pipeline-step p {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .agent-badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+    }
+    .badge-rule, .badge-llm { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
+
+    .pipeline-h-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-color);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      padding: 0 0.1rem;
+      user-select: none;
+    }
+    .pipeline-h-arrow-hidden {
+      font-size: var(--text-xl);
+      padding: 0 0.1rem;
+      visibility: hidden;
+    }
+    .drop-cell { display: flex; justify-content: center; }
+    .drop-line { width: 2px; height: 100%; background: var(--primary-color); opacity: 0.3; }
+
+    .memory-block {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border: 2px solid #93c5fd;
+      border-radius: var(--border-radius-lg);
+      padding: 1.25rem 2rem;
+      text-align: center;
+    }
+    .memory-title {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #1d4ed8;
+      margin-bottom: 0.875rem;
+    }
+    .memory-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; }
+    .memory-chip {
+      background: white;
+      border: 1.5px solid #93c5fd;
+      border-radius: 999px;
+      padding: 0.3rem 1rem;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: #1e40af;
+    }
+
+    @media (max-width: 768px) {
+      .pipeline-grid { grid-template-columns: 1fr; }
+      .pipeline-h-arrow, .pipeline-drop-row { display: none; }
+    }
+
+    /* ── Image Slider ── */
+    .img-slider { position: relative; width: 100%; }
+    .img-slider-slide { display: none; }
+    .img-slider-slide.active { display: block; }
+    .img-slider-caption {
+      text-align: center;
+      font-size: var(--text-base);
+      color: var(--text-secondary);
+      margin-top: 1rem;
+    }
+    .img-slider-caption strong {
+      font-size: var(--text-lg);
+      color: var(--primary-color);
+      display: block;
+      margin-top: 0.25rem;
+    }
+    .img-slider-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1.25rem;
+    }
+    .img-slider-btn {
+      background: var(--primary-color);
+      border: none;
+      border-radius: 50%;
+      width: 3rem;
+      height: 3rem;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      color: white;
+      box-shadow: var(--shadow-md);
+    }
+    .img-slider-btn:hover {
+      background: var(--primary-hover);
+      transform: scale(1.1);
+      box-shadow: var(--shadow-lg);
+    }
+    .img-slider-counter {
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--text-primary);
+      min-width: 4rem;
+      text-align: center;
+    }
+
+    /* ── Evaluation Table ── */
+    .eval-table-wrapper {
+      overflow-x: auto;
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-color);
+      margin-bottom: 2.5rem;
+    }
+    .eval-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--text-sm);
+      background: var(--background-primary);
+    }
+    .eval-table th, .eval-table td {
+      padding: 0.55rem 0.75rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+    .eval-table .th-top {
+      background: #1e3a8a;
+      color: white;
+      font-weight: 700;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .eval-table .th-top.th-status   { background: #3c7d23; }
+    .eval-table .th-top.th-problems { background: #056fc0; }
+    .eval-table .th-top.th-action   { background: #5fcbf4; color: #1a1a1a; }
+    .eval-table .th-top.th-flags    { background: #ff5d5b; }
+    .eval-table .th-sub {
+      background: var(--background-accent);
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+    }
+    .eval-table .th-label {
+      background: var(--background-secondary);
+      font-weight: 700;
+      color: var(--text-primary);
+      text-align: left;
+    }
+    .eval-table .td-backbone {
+      font-weight: 700;
+      color: var(--text-primary);
+      background: var(--background-secondary);
+      text-align: left;
+      border-right: 2px solid var(--border-color);
+      vertical-align: middle;
+    }
+    .eval-table .td-system {
+      text-align: left;
+      color: var(--text-secondary);
+    }
+    /* ICU-Evo: no special styling — bold comes from <strong> per cell */
+
+    /* Column tints — sub-header row */
+    .eval-table thead tr:last-child th:nth-child(1),
+    .eval-table thead tr:last-child th:nth-child(2) { background: rgba(60, 125, 35, 0.15); }
+    .eval-table thead tr:last-child th:nth-child(3),
+    .eval-table thead tr:last-child th:nth-child(4) { background: rgba(5, 111, 192, 0.15); }
+    .eval-table thead tr:last-child th:nth-child(5),
+    .eval-table thead tr:last-child th:nth-child(6) { background: rgba(95, 203, 244, 0.20); }
+    .eval-table thead tr:last-child th:nth-child(7)  { background: rgba(255, 93, 91, 0.15); }
+
+    /* 9-cell rows: backbone cell + system + 7 data cells */
+    .eval-table tr:has(td[rowspan]) td:nth-child(3),
+    .eval-table tr:has(td[rowspan]) td:nth-child(4) { background: rgba(60, 125, 35, 0.06); }
+    .eval-table tr:has(td[rowspan]) td:nth-child(5),
+    .eval-table tr:has(td[rowspan]) td:nth-child(6) { background: rgba(5, 111, 192, 0.06); }
+    .eval-table tr:has(td[rowspan]) td:nth-child(7),
+    .eval-table tr:has(td[rowspan]) td:nth-child(8) { background: rgba(95, 203, 244, 0.10); }
+    .eval-table tr:has(td[rowspan]) td:nth-child(9)  { background: rgba(255, 93, 91, 0.06); }
+
+    /* 8-cell rows: system + 7 data cells (middle rows + ICU-Evo) */
+    .eval-table tr:not(:has(td[rowspan])) td:nth-child(2),
+    .eval-table tr:not(:has(td[rowspan])) td:nth-child(3) { background: rgba(60, 125, 35, 0.06); }
+    .eval-table tr:not(:has(td[rowspan])) td:nth-child(4),
+    .eval-table tr:not(:has(td[rowspan])) td:nth-child(5) { background: rgba(5, 111, 192, 0.06); }
+    .eval-table tr:not(:has(td[rowspan])) td:nth-child(6),
+    .eval-table tr:not(:has(td[rowspan])) td:nth-child(7) { background: rgba(95, 203, 244, 0.10); }
+    .eval-table tr:not(:has(td[rowspan])) td:nth-child(8)  { background: rgba(255, 93, 91, 0.06); }
+
+    .eval-table .sep td { border-top: 2px solid var(--border-color); }
+    .eval-table tbody tr:last-child td { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Lightbox overlay -->
+  <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">&times;</button>
+    <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()"/>
+  </div>
+
+  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <main id="main-content">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">
+              RealICU: Do LLM Agents Understand Long-Context ICU Data?<br>
+              <span style="font-size: 0.75em; font-weight: 600; color: var(--text-secondary);">A Benchmark Beyond Behavior Imitation</span>
+            </h1>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">Chengzhi Shen<sup>1,2</sup>,</span>
+              <span class="author-block">Weixiang Shen<sup>1,2,3</sup>,</span>
+              <span class="author-block">Tobias Susetzky<sup>1,2</sup>,</span>
+              <span class="author-block">Chen (Cherise) Chen<sup>4</sup>,</span>
+              <span class="author-block">Jun Li<sup>1</sup>,</span>
+              <span class="author-block">Yuyuan Liu<sup>5</sup>,</span>
+              <span class="author-block">Xuepeng Zhang<sup>6</sup>,</span>
+              <span class="author-block">Zhenyu Gong<sup>7,†</sup>,</span>
+              <span class="author-block">Daniel Rueckert<sup>1,2,8,9,†</sup>,</span>
+              <span class="author-block">Jiazhen Pan<sup>1,2,9,†</sup></span>
+            </div>
+
+            <div class="is-size-6 publication-authors" style="margin-top: 1rem; line-height: 2;">
+              <span class="author-block"><sup>1</sup>Technical University of Munich (TUM)</span>&nbsp;&nbsp;
+              <span class="author-block"><sup>2</sup>TUM University Hospital</span>&nbsp;&nbsp;
+              <span class="author-block"><sup>3</sup>LMU Munich</span><br>
+              <span class="author-block"><sup>4</sup>University of Sheffield</span>&nbsp;&nbsp;
+              <span class="author-block"><sup>5</sup>University of Oxford</span>&nbsp;&nbsp;
+              <span class="author-block"><sup>6</sup>Zhongshan Hospital Fudan University</span><br>
+              <span class="author-block"><sup>7</sup>Sun Yat-sen University Cancer Center</span>&nbsp;&nbsp;
+              <span class="author-block"><sup>8</sup>Imperial College London</span>&nbsp;&nbsp;
+              <span class="author-block"><sup>9</sup>Munich Center for Machine Learning (MCML)</span>
+            </div>
+
+            <div class="is-size-6 publication-authors" style="margin-top: 0.75rem;">
+              <span class="eql-cntrb"><small><sup>†</sup>Corresponding Authors</small></span>
+            </div>
+
+
+            <div class="column has-text-centered" style="margin-top: 1.5rem;">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="#" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="#" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>Code</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark" style="opacity: 0.6; cursor: default;" onclick="return false;" title="Coming soon">
+                    <span class="icon"><i class="fas fa-database"></i></span>
+                    <span>Dataset <small>(Coming Soon)</small></span>
+                  </a>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Teaser Figure -->
+  <section class="hero teaser">
+    <div class="container is-max-desktop">
+      <div class="hero-body">
+        <img src="static/images/story_figure.jpg" alt="ICU AI co-pilot decision support overview"
+             class="teaser-figure" />
+        <p class="section-subtitle" style="margin-top: 1.5rem; margin-bottom: 0;">
+          ICU decisions are made under massive data volume and time pressure. An ICU AI co-pilot
+          integrates evolving data streams into a decision-support panel that assesses
+          <em>Patient Status</em>, identifies <em>Acute Problems</em>, proposes
+          <em>Recommended Actions</em>, and warns against unsafe <em>Red Flag</em> actions.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Contributions -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Key Contributions</h2>
+      <div class="contribution-item">
+        <div class="contribution-number">1</div>
+        <div class="contribution-content">
+          <p>
+            <strong>We define the core capabilities of a useful ICU AI co-pilot with over 30 clinicians: </strong>
+            assessing <em>Patient Status</em>, <em>Acute Problems</em>,
+            <em>Recommended Actions</em>, and <em>Red Flag Actions</em>.
+          </p>
+        </div>
+      </div>
+      <div class="contribution-item">
+        <div class="contribution-number">2</div>
+        <div class="contribution-content">
+          <p>
+            <strong>We propose a systematic benchmark and evaluation framework.</strong> 
+            <em>RealICU-Gold</em>: 930 physician-consensus windows.  
+            <em>RealICU-Scale</em>: 11,862 windows labeled by <em>Oracle</em>, a physician-validated LLM evaluator.
+            All annotations are created using hindsight review of the full patient trajectory, reflecting clinical correctness beyond than behavior imitation.
+          </p>
+        </div>
+      </div>
+      <div class="contribution-item">
+        <div class="contribution-number">3</div>
+        <div class="contribution-content">
+          <p>
+            <strong>We introduce a solution to study memory-augmented agents.</strong>
+            ICU-Evo, a structured-memory agent that organizes clinical context into
+            heterogeneous memory types aligned with how clinicians reason.
+          </p>
+        </div>
+      </div>
+      <div class="contribution-item">
+        <div class="contribution-number">4</div>
+        <div class="contribution-content">
+          <p>
+            <strong>We identify key failure modes.</strong> A recall&ndash;safety tradeoff and
+            anchoring bias across frontier LLMs. Structured memory helps long-horizon reasoning
+            but is not sufficient for safe ICU decision support.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Abstract -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              Intensive care units (ICU) generate long, dense and evolving streams of clinical
+              information, where physicians must repeatedly reassess patient states under time
+              pressure, underscoring a clear need for reliable AI decision support. Existing ICU
+              benchmarks typically treat historical clinician actions as ground truth. However,
+              these actions are made <strong>under incomplete information and limited temporal context of
+              the underlying patient state</strong>, and may therefore be suboptimal, making it difficult
+              to assess the true reasoning capabilities of AI systems.
+            </p>
+            <p>
+              We introduce <strong>RealICU</strong>, a hindsight-annotated benchmark for
+              evaluating large language models (LLMs) under realistic ICU conditions, where
+              labels are created after senior physicians review <strong>the full patient trajectory using hindsight</strong>.
+              We formulate four physician-motivated tasks: assess <em>Patient Status</em>,
+              <em>Acute Problems</em>, <em>Recommended Actions</em>, and <em>Red Flag</em>
+              actions that risk unsafe outcomes. We partition each trajectory with 30-min
+              windows and release two datasets: <strong>RealICU-Gold</strong> with 930-window
+              annotations from 94 MIMIC-IV patients, and <strong>RealICU-Scale</strong> with
+              11,862 windows extended by <strong>Oracle</strong>, a physician-validated LLM hindsight
+              labeler.
+            </p>
+            <p>
+              Existing LLMs including memory-augmented ones performed poorly on <strong>RealICU</strong>,
+              exposing two failure modes: a <em>recall&ndash;safety tradeoff</em> for clinical
+              recommendations, and an <em>anchoring bias</em> to early interpretations of the
+              patient. We further introduce <strong>ICU-Evo</strong> to study structured-memory
+              agents that improves long-horizon reasoning but does not fully eliminate safety
+              failures. Together, <strong>RealICU</strong> provides a clinically grounded testbed for measuring
+              and improving AI sequential decision-support in high-stakes care.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Four Tasks -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Four Physician-Motivated Tasks</h2>
+      <p class="section-subtitle">
+        In consultations with over 30 board-certified clinicians, RealICU evaluates four core capabilities required
+        for a clinically useful ICU co-pilot.
+      </p>
+      <div class="columns is-multiline">
+        <div class="column is-half">
+          <div class="task-card">
+            <div class="task-icon">🩺</div>
+            <h3>Patient Status</h3>
+            <p>
+              Assess the current overall status of the patient based on all available clinical
+              data.
+            </p>
+          </div>
+        </div>
+        <div class="column is-half">
+          <div class="task-card">
+            <div class="task-icon">🔍</div>
+            <h3>Acute Problems</h3>
+            <p>
+              Identify acute clinical problems requiring continuous attention and monitoring in future bedside care.
+            </p>
+          </div>
+        </div>
+        <div class="column is-half">
+          <div class="task-card">
+            <div class="task-icon">💊</div>
+            <h3>Recommended Actions</h3>
+            <p>
+              Propose short-term treatment recommendations appropriate for the patient's
+              condition.
+            </p>
+          </div>
+        </div>
+        <div class="column is-half">
+          <div class="task-card">
+            <div class="task-icon">⚠️</div>
+            <h3>Red Flag Actions</h3>
+            <p>
+              Identify actions that should be avoided for this specific patient that might cause unsafe outcomes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dataset -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">The RealICU Benchmark</h2>
+      <p class="section-subtitle">
+        Based on MIMIC-IV, labels are produced by physicians reviewing the complete patient trajectory with hindsight.
+      </p>
+      <div style="background: var(--background-primary); border: 1px solid var(--border-color); border-left: 4px solid var(--primary-color); border-radius: var(--border-radius); padding: 1.5rem 2rem; margin-bottom: 2rem;">
+        <h4 style="font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem; font-size: var(--text-lg);">
+          Beyond Behavior Imitation: Hindsight Reviewing
+        </h4>
+        <p style="color: var(--text-secondary); font-size: var(--text-base); line-height: 1.7; margin: 0;">
+          Traditional ICU benchmarks treat recorded clinician actions as ground truth, but these
+          actions reflect decisions made under uncertainty, not necessarily optimal care.
+          RealICU's evaluation is grounded in hindsight review of the full patient trajectory,
+          scoring LLM agents based on clinical correctness rather than behavioral imitation.
+        </p>
+      </div>
+
+      <div class="columns">
+        <div class="column">
+          <div class="dataset-card">
+            <h3>RealICU-Gold</h3>
+            <div class="columns is-multiline">
+              <div class="column is-half">
+                <div class="stat-block">
+                  <div class="stat-number">930</div>
+                  <div class="stat-label">Annotated Windows</div>
+                </div>
+              </div>
+              <div class="column is-half">
+                <div class="stat-block">
+                  <div class="stat-number">94</div>
+                  <div class="stat-label">ICU Patients</div>
+                </div>
+              </div>
+              <div class="column is-12">
+                <p style="font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.7;">
+                  Physician-consensus annotations from five senior ICU physicians reviewing full
+                  patient trajectories in hindsight. The gold standard for reliable model evaluation.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="dataset-card">
+            <h3>RealICU-Scale</h3>
+            <div class="columns is-multiline">
+              <div class="column is-half">
+                <div class="stat-block">
+                  <div class="stat-number">11,862</div>
+                  <div class="stat-label">Annotated Windows</div>
+                </div>
+              </div>
+              <div class="column is-half">
+                <div class="stat-block">
+                  <div class="stat-number">13×</div>
+                  <div class="stat-label">Scale over Gold</div>
+                </div>
+              </div>
+              <div class="column is-12">
+                <p style="font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.7;">
+                  Large-scale extension using <em>Oracle</em>, a physician-validated LLM-based
+                  hindsight evaluator calibrated against expert consensus.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cohort statistics figure -->
+      <figure class="image" style="margin-top: 2rem;">
+        <img src="static/images/cohort_statistics.png" alt="RealICU patient cohort statistics"
+             style="border-radius: var(--border-radius-lg); box-shadow: var(--shadow-lg); width: 100%;" loading="lazy"/>
+      </figure>
+      <p class="section-subtitle" style="margin-top: 1.5rem; margin-bottom: 0;">
+        Summary statistics of the RealICU patient cohort derived from MIMIC-IV, including
+        age, gender, ICU duration, disease categories, and outcome distributions.
+      </p>
+    </div>
+  </section>
+
+  <!-- ICU-Evo -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">ICU-Evo: Agent Pipeline</h2>
+      <p class="section-subtitle">
+        We introduce ICU-Evo as an instance of the memory-augmented agent frameworks to
+        study how structured memory design shapes clinical decision-making.
+      </p>
+
+      <!-- Agent row -->
+      <div class="pipeline-grid">
+        <div class="pipeline-step">
+          <div class="agent-icon">⚙️</div>
+          <h4>Observation Agent</h4>
+          <span class="agent-badge badge-rule">Rule-based</span>
+          <p>Normalize measurements, align them to the 30-min window, and extract vital trend signals.</p>
+        </div>
+        <div class="pipeline-h-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="agent-icon">⚙️</div>
+          <h4>Assessment Agent</h4>
+          <span class="agent-badge badge-llm">LLM</span>
+          <p>Compress trajectory summary and find critical clinical events.</p>
+        </div>
+        <div class="pipeline-h-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="agent-icon">⚙️</div>
+          <h4>Insight Agent</h4>
+          <span class="agent-badge badge-llm">LLM</span>
+          <p>Proposes patient-specific hypotheses.</p>
+        </div>
+        <div class="pipeline-h-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="agent-icon">⚙️</div>
+          <h4>Predictor</h4>
+          <span class="agent-badge badge-llm">LLM</span>
+          <p>Read the full memory state, and predict downstream tasks.</p>
+        </div>
+      </div>
+
+      <!-- Vertical drop connectors — same grid columns so lines align under agents -->
+      <div class="pipeline-drop-row">
+        <div class="drop-cell"><div class="drop-line"></div></div>
+        <div class="pipeline-h-arrow-hidden">→</div>
+        <div class="drop-cell"><div class="drop-line"></div></div>
+        <div class="pipeline-h-arrow-hidden">→</div>
+        <div class="drop-cell"><div class="drop-line"></div></div>
+        <div class="pipeline-h-arrow-hidden">→</div>
+        <div class="drop-cell"><div class="drop-line"></div></div>
+      </div>
+
+      <!-- Shared memory block -->
+      <div class="memory-block">
+        <span class="memory-title">Shared Memory</span>
+        <div class="memory-chips">
+          <span class="memory-chip">📝 Working</span>
+          <span class="memory-chip">📈 Trend</span>
+          <span class="memory-chip">⚡ Critical Events</span>
+          <span class="memory-chip">📖 Trajectory</span>
+          <span class="memory-chip">🧩 Insight</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benchmarking Results and Failure Modes -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Benchmark Results and Failure Modes</h2>
+
+      <!-- Benchmark Results -->
+      <h3 class="title is-5 has-text-centered" style="margin-bottom: 1.5rem;">Benchmark Results</h3>
+
+      <!-- RealICU-Gold results table -->
+      <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+        <span style="background:#f0fdf4; color:#3c7d23; border:1px solid #86efac; font-weight:700; font-size:var(--text-sm); padding:0.3rem 0.9rem; border-radius:999px;">RealICU-Gold</span>
+        <span style="font-size:var(--text-base); font-weight:600; color:var(--text-primary);">Evaluation Results — Physician-Annotated Gold Standard (930 windows)</span>
+      </div>
+      <div class="eval-table-wrapper">
+        <table class="eval-table">
+          <thead>
+            <tr>
+              <th rowspan="2" class="th-label" style="min-width:120px;">Backbone</th>
+              <th rowspan="2" class="th-label" style="min-width:110px;">System</th>
+              <th colspan="2" class="th-top th-status">Patient Status</th>
+              <th colspan="2" class="th-top th-problems">Acute Problems</th>
+              <th colspan="2" class="th-top th-action">Action Recom.</th>
+              <th colspan="1" class="th-top th-flags">Red Flags</th>
+            </tr>
+            <tr>
+              <th class="th-sub">Acc&nbsp;↑</th>
+              <th class="th-sub">F1&nbsp;↑</th>
+              <th class="th-sub">Hit@5&nbsp;↑</th>
+              <th class="th-sub">R@5&nbsp;↑</th>
+              <th class="th-sub">Hit@5&nbsp;↑</th>
+              <th class="th-sub">R@5&nbsp;↑</th>
+              <th class="th-sub">HRR@5&nbsp;↓</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Gemini -->
+            <tr>
+              <td class="td-backbone" rowspan="4">Gemini-3.1-pro</td>
+              <td class="td-system">Full-context</td>
+              <td>0.298</td><td><u>0.258</u></td>
+              <td>0.486</td><td>0.308</td>
+              <td>0.259</td><td>0.152</td>
+              <td><strong>0.137</strong></td>
+            </tr>
+            <tr>
+              <td class="td-system">Local-window</td>
+              <td><u>0.315</u></td><td>0.239</td>
+              <td>0.459</td><td>0.258</td>
+              <td>0.395</td><td>0.260</td>
+              <td><u>0.151</u></td>
+            </tr>
+            <tr>
+              <td class="td-system">RAG</td>
+              <td>0.402</td><td>0.348</td>
+              <td><u>0.596</u></td><td><u>0.342</u></td>
+              <td><u>0.496</u></td><td><u>0.313</u></td>
+              <td>0.216</td>
+            </tr>
+            <tr class="row-evo">
+              <td class="td-system td-backbone" style="font-weight:700;">ICU-Evo</td>
+              <td><strong>0.459</strong></td><td><strong>0.365</strong></td>
+              <td><strong>0.823</strong></td><td><strong>0.526</strong></td>
+              <td><strong>0.676</strong></td><td><strong>0.534</strong></td>
+              <td>0.300</td>
+            </tr>
+            <!-- GPT -->
+            <tr class="sep">
+              <td class="td-backbone" rowspan="4">GPT-5.4</td>
+              <td class="td-system">Full-context</td>
+              <td><u>0.294</u></td><td>0.233</td>
+              <td>0.510</td><td>0.348</td>
+              <td>0.404</td><td>0.300</td>
+              <td>0.298</td>
+            </tr>
+            <tr>
+              <td class="td-system">Local-window</td>
+              <td>0.233</td><td>0.184</td>
+              <td>0.500</td><td>0.293</td>
+              <td>0.380</td><td>0.281</td>
+              <td><strong>0.165</strong></td>
+            </tr>
+            <tr>
+              <td class="td-system">RAG</td>
+              <td>0.288</td><td><u>0.256</u></td>
+              <td><u>0.599</u></td><td><u>0.349</u></td>
+              <td><u>0.480</u></td><td><u>0.398</u></td>
+              <td><u>0.234</u></td>
+            </tr>
+            <tr class="row-evo">
+              <td class="td-system td-backbone" style="font-weight:700;">ICU-Evo</td>
+              <td><strong>0.312</strong></td><td><strong>0.264</strong></td>
+              <td><strong>0.867</strong></td><td><strong>0.570</strong></td>
+              <td><strong>0.676</strong></td><td><strong>0.534</strong></td>
+              <td>0.473</td>
+            </tr>
+            <!-- Qwen -->
+            <tr class="sep">
+              <td class="td-backbone" rowspan="4">Qwen3-235B</td>
+              <td class="td-system">Full-context</td>
+              <td>0.225</td><td><u>0.188</u></td>
+              <td><u>0.384</u></td><td><u>0.226</u></td>
+              <td>0.329</td><td>0.222</td>
+              <td>0.117</td>
+            </tr>
+            <tr>
+              <td class="td-system">Local-window</td>
+              <td>0.152</td><td>0.154</td>
+              <td>0.213</td><td>0.126</td>
+              <td>0.352</td><td>0.242</td>
+              <td><strong>0.080</strong></td>
+            </tr>
+            <tr>
+              <td class="td-system">RAG</td>
+              <td><strong>0.315</strong></td><td><strong>0.271</strong></td>
+              <td>0.379</td><td>0.211</td>
+              <td><u>0.453</u></td><td><u>0.324</u></td>
+              <td><u>0.095</u></td>
+            </tr>
+            <tr class="row-evo">
+              <td class="td-system td-backbone" style="font-weight:700;">ICU-Evo</td>
+              <td><u>0.253</u></td><td>0.197</td>
+              <td><strong>0.600</strong></td><td><strong>0.362</strong></td>
+              <td><strong>0.526</strong></td><td><strong>0.357</strong></td>
+              <td>0.117</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size: var(--text-sm); color: var(--text-secondary); text-align: center; margin-bottom: 2rem;">
+        <strong>bold</strong> = best &nbsp;·&nbsp; <u>underline</u> = second best (per column, per backbone) &nbsp;·&nbsp; HRR@5 ↓ lower is better
+      </p>
+
+      <!-- RealICU-Scale results table -->
+      <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem; margin-top:2rem;">
+        <span style="background:#eff6ff; color:#056fc0; border:1px solid #93c5fd; font-weight:700; font-size:var(--text-sm); padding:0.3rem 0.9rem; border-radius:999px;">RealICU-Scale</span>
+        <span style="font-size:var(--text-base); font-weight:600; color:var(--text-primary);">Evaluation Results — Oracle-Labeled Scale Set (11,862 windows)</span>
+      </div>
+      <div class="eval-table-wrapper">
+        <table class="eval-table">
+          <thead>
+            <tr>
+              <th rowspan="2" class="th-label" style="min-width:120px;">Backbone</th>
+              <th rowspan="2" class="th-label" style="min-width:110px;">System</th>
+              <th colspan="2" class="th-top th-status">Patient Status</th>
+              <th colspan="2" class="th-top th-problems">Acute Problems</th>
+              <th colspan="2" class="th-top th-action">Action Recom.</th>
+              <th colspan="1" class="th-top th-flags">Red Flags</th>
+            </tr>
+            <tr>
+              <th class="th-sub">Acc&nbsp;↑</th>
+              <th class="th-sub">F1&nbsp;↑</th>
+              <th class="th-sub">Hit@5&nbsp;↑</th>
+              <th class="th-sub">R@5&nbsp;↑</th>
+              <th class="th-sub">Hit@5&nbsp;↑</th>
+              <th class="th-sub">R@5&nbsp;↑</th>
+              <th class="th-sub">HRR&nbsp;↓</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Gemini -->
+            <tr>
+              <td class="td-backbone" rowspan="4">Gemini-3.1-pro</td>
+              <td class="td-system">Full-context</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+            </tr>
+            <tr>
+              <td class="td-system">Local-window</td>
+              <td>0.405</td><td><u>0.264</u></td>
+              <td>0.487</td><td>0.265</td>
+              <td><u>0.447</u></td><td><u>0.307</u></td>
+              <td><strong>0.066</strong></td>
+            </tr>
+            <tr>
+              <td class="td-system">RAG</td>
+              <td><u>0.442</u></td><td><u>0.312</u></td>
+              <td><u>0.568</u></td><td><u>0.315</u></td>
+              <td><u>0.466</u></td><td><u>0.331</u></td>
+              <td><u>0.073</u></td>
+            </tr>
+            <tr class="row-evo">
+              <td class="td-system td-backbone">ICU-Evo</td>
+              <td><strong>0.519</strong></td><td><strong>0.348</strong></td>
+              <td><strong>0.827</strong></td><td><strong>0.518</strong></td>
+              <td><strong>0.514</strong></td><td><strong>0.330</strong></td>
+              <td>0.087</td>
+            </tr>
+            <!-- GPT -->
+            <tr class="sep">
+              <td class="td-backbone" rowspan="4">GPT-5.4</td>
+              <td class="td-system">Full-context</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+            </tr>
+            <tr>
+              <td class="td-system">Local-window</td>
+              <td><u>0.415</u></td><td><u>0.265</u></td>
+              <td>0.475</td><td>0.266</td>
+              <td>0.451</td><td>0.308</td>
+              <td><strong>0.073</strong></td>
+            </tr>
+            <tr>
+              <td class="td-system">RAG</td>
+              <td>0.411</td><td>0.269</td>
+              <td><u>0.584</u></td><td><u>0.321</u></td>
+              <td><u>0.509</u></td><td><strong>0.435</strong></td>
+              <td>0.096</td>
+            </tr>
+            <tr class="row-evo">
+              <td class="td-system td-backbone">ICU-Evo</td>
+              <td><strong>0.438</strong></td><td><strong>0.327</strong></td>
+              <td><strong>0.852</strong></td><td><strong>0.562</strong></td>
+              <td><strong>0.575</strong></td><td><u>0.368</u></td>
+              <td><u>0.090</u></td>
+            </tr>
+            <!-- Qwen -->
+            <tr class="sep">
+              <td class="td-backbone" rowspan="4">Qwen3-235B</td>
+              <td class="td-system">Full-context</td>
+              <td>0.201</td><td>0.116</td>
+              <td><u>0.401</u></td><td><u>0.232</u></td>
+              <td><u>0.455</u></td><td>0.299</td>
+              <td><u>0.215</u></td>
+            </tr>
+            <tr>
+              <td class="td-system">Local-window</td>
+              <td>0.175</td><td>0.159</td>
+              <td>0.254</td><td>0.142</td>
+              <td>0.440</td><td>0.295</td>
+              <td><strong>0.207</strong></td>
+            </tr>
+            <tr>
+              <td class="td-system">RAG</td>
+              <td><strong>0.367</strong></td><td><strong>0.282</strong></td>
+              <td>0.379</td><td>0.207</td>
+              <td>0.446</td><td><strong>0.342</strong></td>
+              <td>0.225</td>
+            </tr>
+            <tr class="row-evo">
+              <td class="td-system td-backbone">ICU-Evo</td>
+              <td><u>0.304</u></td><td><u>0.177</u></td>
+              <td><strong>0.649</strong></td><td><strong>0.375</strong></td>
+              <td><strong>0.515</strong></td><td><u>0.327</u></td>
+              <td>0.292</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size: var(--text-sm); color: var(--text-secondary); text-align: center; margin-bottom: 2rem;">
+        <strong>bold</strong> = best &nbsp;·&nbsp; <u>underline</u> = second best (per column, per backbone) &nbsp;·&nbsp; — = not evaluated &nbsp;·&nbsp; HRR ↓ lower is better
+      </p>
+
+      <!-- Temporal performance slider -->
+      <div class="img-slider" id="temporalSlider" style="margin-bottom: 3rem;">
+        <div class="img-slider-track">
+          <div class="img-slider-slide active">
+            <figure class="image">
+              <img src="static/images/absolute_hour_summary_4panel_gemini.jpg" alt="Performance over time — Gemini-3.1-pro"
+                   style="border-radius: var(--border-radius); box-shadow: var(--shadow-md); width: 100%;" loading="lazy"/>
+            </figure>
+            <p class="img-slider-caption">Performance over ICU stay hours<strong>Gemini-3.1-pro</strong></p>
+          </div>
+          <div class="img-slider-slide">
+            <figure class="image">
+              <img src="static/images/absolute_hour_summary_4panel_gpt.jpg" alt="Performance over time — GPT-5.4"
+                   style="border-radius: var(--border-radius); box-shadow: var(--shadow-md); width: 100%;" loading="lazy"/>
+            </figure>
+            <p class="img-slider-caption">Performance over ICU stay hours<strong>GPT-5.4</strong></p>
+          </div>
+          <div class="img-slider-slide">
+            <figure class="image">
+              <img src="static/images/absolute_hour_summary_4panel_qwen.jpg" alt="Performance over time — Qwen3-235B"
+                   style="border-radius: var(--border-radius); box-shadow: var(--shadow-md); width: 100%;" loading="lazy"/>
+            </figure>
+            <p class="img-slider-caption">Performance over ICU stay hours<strong>Qwen3-235B</strong></p>
+          </div>
+        </div>
+        <div class="img-slider-controls">
+          <button class="img-slider-btn" onclick="sliderPrev('temporalSlider')" aria-label="Previous">&#8592;</button>
+          <span class="img-slider-counter" id="temporalSlider-counter">1 / 3</span>
+          <button class="img-slider-btn" onclick="sliderNext('temporalSlider')" aria-label="Next">&#8594;</button>
+        </div>
+      </div>
+
+      <!-- Failure Modes -->
+      <div class="container is-max-desktop" style="padding: 0;">
+        <h3 class="title is-5 has-text-centered" style="margin-bottom: 1rem;">Failure Modes</h3>
+        <p class="section-subtitle" style="margin-bottom: 1.5rem;">
+          RealICU reveals critical limitations in current frontier LLMs that must be addressed
+          before deployment in clinical settings. These findings underscore that
+          <strong>RealICU remains largely unsolved</strong>.
+        </p>
+        <div class="failure-mode-card">
+          <h4>⚠️ Recall&ndash;Safety Tradeoff</h4>
+          <p>
+            Higher recommendation recall can increase unsafe recommendations by up to 47.3%.
+            Agents that suggest more actions to improve coverage simultaneously propose more
+            potentially harmful interventions, creating a fundamental tension between completeness
+            and safety in clinical recommendation systems. 
+          </p>
+        </div>
+        <div class="failure-mode-card">
+          <h4>⚠️ Anchoring Bias</h4>
+          <p>
+            Agents preserve early interpretations of a patient despite later contradictory
+            evidence. As patient trajectories evolve over hours in the ICU, LLMs fail to
+            adequately revise their clinical assessments in response to new laboratory results,
+            vital signs, or medication changes, resulting in stale recommendations that do not
+            reflect the current patient state.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- BibTeX -->
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <div class="bibtex-header">
+        <h2 class="title">BibTeX</h2>
+        <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+          <i class="fas fa-copy"></i>
+          <span class="copy-text">Copy</span>
+        </button>
+      </div>
+      <pre id="bibtex-code"><code>TODO</code></pre>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              This page was built using the
+              <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>
+              adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+              This website is licensed under a
+              <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
+              Commons Attribution-ShareAlike 4.0 International License</a>.
+            </p>
+            <p>
+              For questions about RealICU, contact
+              <a href="mailto:jiazhen.pan@tum.de">jiazhen.pan@tum.de</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  </main>
+</body>
+</html>
