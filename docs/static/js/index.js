@@ -125,10 +125,21 @@ function sliderMove(sliderId, delta) {
     var slides = container.querySelectorAll('.img-slider-slide');
     var counter = document.getElementById(sliderId + '-counter');
     var current = Array.from(slides).findIndex(s => s.classList.contains('active'));
-    slides[current].classList.remove('active');
     var next = (current + delta + slides.length) % slides.length;
-    slides[next].classList.add('active');
-    if (counter) counter.textContent = (next + 1) + ' / ' + slides.length;
+    var nextImg = slides[next].querySelector('img');
+
+    function doSwap() {
+        slides[current].classList.remove('active');
+        slides[next].classList.add('active');
+        if (counter) counter.textContent = (next + 1) + ' / ' + slides.length;
+    }
+
+    if (nextImg && !nextImg.complete) {
+        nextImg.addEventListener('load', doSwap, { once: true });
+        nextImg.addEventListener('error', doSwap, { once: true });
+    } else {
+        doSwap();
+    }
 }
 function sliderNext(id) { sliderMove(id, 1); }
 function sliderPrev(id) { sliderMove(id, -1); }
