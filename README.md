@@ -3,7 +3,7 @@
 
 <div align="center">
 
-[![Paper](https://img.shields.io/badge/📄%20Paper-Coming%20Soon-red?style=for-the-badge)](https://github.com/chengzhi-leo/RealICU-Bench)
+[![Paper](https://img.shields.io/badge/📄%20Paper-arXiv-red?style=for-the-badge)](http://arxiv.org/abs/2605.13542)
 [![Website](https://img.shields.io/badge/🌐%20Project%20Website-4285F4?style=for-the-badge)](https://chengzhi-leo.github.io/RealICU-Bench/)
 [![Dataset](https://img.shields.io/badge/🗄️%20Dataset-Coming%20Soon-orange?style=for-the-badge)](https://github.com/chengzhi-leo/RealICU-Bench)
 
@@ -219,7 +219,7 @@ python evaluation/eval_recommendation.py \
 
 <div align="center">
 
-If you find this work useful, please consider citing our paper (coming soon).
+If you find this work useful, please consider citing our [paper](http://arxiv.org/abs/2605.13542).
 
 [![Website](https://img.shields.io/badge/🌐%20Visit%20Project%20Website-4285F4?style=flat-square)](https://chengzhi-leo.github.io/RealICU-Bench/)
 

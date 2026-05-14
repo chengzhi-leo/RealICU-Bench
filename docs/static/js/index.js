@@ -145,7 +145,7 @@ function sliderNext(id) { sliderMove(id, 1); }
 function sliderPrev(id) { sliderMove(id, -1); }
 
 // Lightbox
-function openLightbox(src, alt) {
+function openLightboxImage(src, alt) {
     var overlay = document.getElementById('lightbox');
     var img = document.getElementById('lightbox-img');
     img.src = src;
@@ -155,7 +155,11 @@ function openLightbox(src, alt) {
 }
 
 function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('active');
+    var overlay = document.getElementById('lightbox');
+    var img = document.getElementById('lightbox-img');
+    overlay.classList.remove('active');
+    img.src = '';
+    img.alt = '';
     document.body.style.overflow = '';
 }
 
@@ -165,9 +169,8 @@ document.addEventListener('keydown', function(e) {
 
 function attachLightbox() {
     document.querySelectorAll('figure img, .results-carousel img, .teaser-figure').forEach(function(img) {
-        if (img.closest('.img-slider')) return;
         img.addEventListener('click', function() {
-            openLightbox(this.src, this.alt);
+            openLightboxImage(this.src, this.alt);
         });
     });
 }

@@ -315,7 +315,7 @@
     }
     .lightbox-close:hover { opacity: 1; }
     figure img, .results-carousel img, .teaser-figure { cursor: zoom-in; }
-    .img-slider figure img { cursor: default; }
+    .img-slider figure img { cursor: zoom-in; }
 
     /* ── ICU-Evo Pipeline ── */
     .pipeline-grid,
@@ -411,14 +411,25 @@
     @media (max-width: 768px) {
       .pipeline-grid { grid-template-columns: 1fr; }
       .pipeline-h-arrow, .pipeline-drop-row { display: none; }
+      .lightbox-overlay { padding: 0.75rem; }
     }
 
     /* ── Image Slider ── */
     .img-slider { position: relative; width: 100%; }
     .img-slider-slide { display: none; }
     .img-slider-slide.active { display: block; }
-    .img-slider-slide figure { aspect-ratio: 4119 / 2427; background: var(--background-secondary); border-radius: var(--border-radius); }
-    .img-slider-slide figure img { width: 100%; height: 100%; object-fit: contain; }
+    .img-slider-main {
+      aspect-ratio: 4119 / 2427;
+      width: 100%;
+      background: var(--background-secondary);
+      border-radius: var(--border-radius);
+    }
+    .img-slider-main img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
     .img-slider-caption {
       text-align: center;
       font-size: var(--text-base);
@@ -477,6 +488,7 @@
     .eval-table {
       width: 100%;
       border-collapse: collapse;
+      table-layout: fixed;
       font-size: var(--text-sm);
       background: var(--background-primary);
     }
@@ -484,7 +496,8 @@
       padding: 0.55rem 0.75rem;
       text-align: center;
       border-bottom: 1px solid var(--border-color);
-      white-space: nowrap;
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
     .eval-table .th-top {
       background: #1e3a8a;
@@ -509,6 +522,7 @@
       font-weight: 700;
       color: var(--text-primary);
       text-align: left;
+      min-width: 0 !important;
     }
     .eval-table .td-backbone {
       font-weight: 700;
@@ -517,10 +531,14 @@
       text-align: left;
       border-right: 2px solid var(--border-color);
       vertical-align: middle;
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
     .eval-table .td-system {
       text-align: left;
       color: var(--text-secondary);
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
     /* ICU-Evo: no special styling — bold comes from <strong> per cell */
 
@@ -553,6 +571,18 @@
 
     .eval-table .sep td { border-top: 2px solid var(--border-color); }
     .eval-table tbody tr:last-child td { border-bottom: none; }
+
+    @media (max-width: 1023px) {
+      .eval-table-wrapper { overflow-x: auto; }
+      .eval-table th, .eval-table td {
+        padding: 0.42rem 0.5rem;
+        font-size: 0.68rem;
+      }
+      .eval-table .th-top,
+      .eval-table .th-sub {
+        font-size: 0.62rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -614,7 +644,7 @@
             <div class="column has-text-centered" style="margin-top: 1.5rem;">
               <div class="publication-links">
                 <span class="link-block">
-                  <a href="#" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                  <a href="http://arxiv.org/abs/2605.13542" target="_blank" class="external-link button is-normal is-rounded is-dark">
                     <span class="icon"><i class="fas fa-file-pdf"></i></span>
                     <span>Paper</span>
                   </a>
@@ -1201,21 +1231,21 @@
       <div class="img-slider" id="temporalSlider" style="margin-bottom: 3rem;">
         <div class="img-slider-track">
           <div class="img-slider-slide active">
-            <figure class="image">
+            <figure class="image img-slider-main">
               <img src="static/images/absolute_hour_summary_4panel_gemini.jpg" alt="Performance over time — Gemini-3.1-pro"
                    style="border-radius: var(--border-radius); box-shadow: var(--shadow-md); width: 100%;"/>
             </figure>
             <p class="img-slider-caption">Performance over ICU stay hours<strong>Gemini-3.1-pro</strong></p>
           </div>
           <div class="img-slider-slide">
-            <figure class="image">
+            <figure class="image img-slider-main">
               <img src="static/images/absolute_hour_summary_4panel_gpt.jpg" alt="Performance over time — GPT-5.4"
                    style="border-radius: var(--border-radius); box-shadow: var(--shadow-md); width: 100%;"/>
             </figure>
             <p class="img-slider-caption">Performance over ICU stay hours<strong>GPT-5.4</strong></p>
           </div>
           <div class="img-slider-slide">
-            <figure class="image">
+            <figure class="image img-slider-main">
               <img src="static/images/absolute_hour_summary_4panel_qwen.jpg" alt="Performance over time — Qwen3-235B"
                    style="border-radius: var(--border-radius); box-shadow: var(--shadow-md); width: 100%;"/>
             </figure>
@@ -1230,7 +1260,7 @@
       </div>
 
       <!-- Failure Modes -->
-      <div class="container is-max-desktop" style="padding: 0;">
+      <div style="padding: 0;">
         <h3 class="title is-5 has-text-centered" style="margin-bottom: 1rem;">Failure Modes</h3>
         <p class="section-subtitle" style="margin-bottom: 1.5rem;">
           RealICU reveals critical limitations in current frontier LLMs that must be addressed
