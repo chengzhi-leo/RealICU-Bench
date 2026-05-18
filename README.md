@@ -217,10 +217,14 @@ python evaluation/eval_recommendation.py \
 
 ---
 
-<div align="center">
 
-If you find this work useful, please consider citing our [paper](http://arxiv.org/abs/2605.13542).
+If you find this work useful, please cite our work:
 
-[![Website](https://img.shields.io/badge/🌐%20Visit%20Project%20Website-4285F4?style=flat-square)](https://chengzhi-leo.github.io/RealICU-Bench/)
-
-</div>
+```bibtex
+@article{shen2026realicu,
+  title={RealICU: Do LLM Agents Understand Long-Context ICU Data? A Benchmark Beyond Behavior Imitation},
+  author={Shen, Chengzhi and Shen, Weixiang and Susetzky, Tobias and Li, Jun and Liu, Yuyuan and Zhang, Xuepeng and Gong, Zhenyu and Rueckert, Daniel and Pan, Jiazhen and others},
+  journal={arXiv preprint arXiv:2605.13542},
+  year={2026}
+}
+```
