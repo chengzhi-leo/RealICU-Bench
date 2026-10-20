@@ -1,5 +1,4 @@
-# RealICU-Bench: Do LLM Agents Understand Long-Context ICU Data?
-### A Benchmark Beyond Behavior Imitation
+# RealICU-Bench [Neurips 2026]
 
 <div align="center">
 
@@ -9,216 +8,196 @@
 
 </div>
 
----
+**RealICU: Do LLM Agents Understand Long-Context ICU Data? A Benchmark Beyond Behavior Imitation**
 
-## Overview
+RealICU evaluates ICU reasoning against hindsight annotations rather than treating
+recorded clinical actions as optimal decisions. RealICU-Gold contains 930 windows
+from 94 ICU stays; RealICU-Scale contains 11,862 windows from the same cohort.
 
-Intensive care units (ICU) generate long, dense and evolving streams of clinical information, where physicians must repeatedly reassess patient states under time pressure, underscoring a clear need for reliable AI decision support. Existing ICU benchmarks typically treat historical clinician actions as ground truth. However, these actions are made **under incomplete information and limited temporal context of the underlying patient state**, and may therefore be suboptimal, making it difficult to assess the true reasoning capabilities of AI systems.
+This repository provides prediction runners, evaluation, and the ICU-Evo
+structured-memory agent. It supports four context modes: current events, full
+history, retrieved history (RAG), and ICU-Evo memory.
 
-**RealICU** is a hindsight-annotated benchmark for evaluating large language models (LLMs) under realistic ICU conditions, where labels are created after senior physicians review **the full patient trajectory using hindsight**. We formulate four physician-motivated tasks — in consultations with over 30 board-certified clinicians — and release two datasets:
+| Task | Output | Scoring |
+| --- | --- | --- |
+| Patient Status | Overall clinical status | Accuracy, mean per-stay accuracy, macro F1 |
+| Acute Problems | Active clinical risks | Auxiliary output; no independent scorer |
+| Recommended Actions | Ordered treatment recommendations | Hit, precision, recall at K |
+| Red Flag Actions | Actions to avoid | Harmful recommendation rate: proposed actions matched against reference red flags |
 
-| Dataset | Windows | Patients | Labels |
-|---|---|---|---|
-| **RealICU-Gold** | 930 | 94 | Physician-consensus annotations from five senior ICU physicians |
-| **RealICU-Scale** | 11,862 | — | Extended by *Oracle*, a physician-validated LLM hindsight labeler |
+Gold and Scale share trajectories and are evaluation sets, not train/test splits.
+Clinical data and experiment outputs are not included in this repository.
 
-### Four Physician-Motivated Tasks
+## 1. Install
 
-| Task | Description |
-|---|---|
-| 🩺 **Patient Status** | Assess the current overall status of the patient based on all available clinical data |
-| 🔍 **Acute Problems** | Identify acute clinical problems requiring continuous attention and monitoring in future bedside care |
-| 💊 **Recommended Actions** | Propose short-term treatment recommendations appropriate for the patient's condition |
-| ⚠️ **Red Flag Actions** | Identify actions that should be avoided for this specific patient that might cause unsafe outcomes |
+Tested with Python 3.11. Run these commands from the repository root:
 
-### ICU-Evo Agent
+```bash
+python -m pip install -e ".[openai]"
+export OPENAI_API_KEY="your-api-key"
+```
 
-We further introduce **ICU-Evo** to study structured-memory agents that improves long-horizon reasoning but does not fully eliminate safety failures. It is an observation-grounded multi-agent pipeline with dynamic memory that organizes clinical context into heterogeneous memory types aligned with how clinicians reason.
+Use `.[anthropic]` or `.[google]` for another provider, `.[retrieval]` for RAG and
+PubMedBERT matching. Extras can be combined, for example
+`python -m pip install -e ".[openai,retrieval]"`.
 
----
+Credentials come from environment variables. The package does not load `.env`
+automatically. Credential names, provider settings, and Vertex settings are
+described in [configuration](docs/configuration.md).
 
-## Repo Layout
+## 2. Prepare the dataset
+
+Download the published RealICU data separately and preserve this layout:
 
 ```text
-RealICU-Bench/
-├── agents/                  # ICU-Evo multi-agent pipeline
-├── config/                  # Runtime config & observation schema
-├── data/                    # Data placeholders (see Data Layout below)
-├── docs/                    # GitHub Pages website source
-├── evaluation/              # Evaluation scripts & PubMedBERT matcher
-├── experiments/             # Memory creation & prediction experiments
-├── model/                   # Unified LLM client (OpenAI / Anthropic / Google)
-├── prompts/                 # Prompt templates for all pipeline stages
-├── utils/                   # Shared helpers (formatting, scoring, RAG)
-├── data_parser.py           # ICU trajectory builder from parquet
-└── requirements.txt
+data/realicu/
+├── trajectories/
+│   ├── events.parquet
+│   └── icu_stay.parquet
+├── gold/labels/<stay_id>.json
+└── scale/labels/<stay_id>.json
 ```
 
----
+Set `data.root` and `data.label_set` in your prediction configuration. Examples
+select one stay; set `data.stay_ids` to `null` for all stays. Evaluation uses
+`labels_dir`, which must point to the corresponding `gold/labels` or
+`scale/labels` directory. Only the published data format is supported.
 
-## Quickstart
+## 3. Run a baseline
 
-### 1. Install dependencies
+Edit `config/examples/patient_status.json` for your data, provider, model, and
+input settings, and `config/examples/evaluate_status.json` for your labels:
 
 ```bash
-conda create -n realicu python=3.10 -y
-conda activate realicu
-pip install -r requirements.txt
+python -m experiments.predict \
+  --config config/examples/patient_status.json \
+  --output runs/local
+
+python -m evaluation.evaluate \
+  --config config/examples/evaluate_status.json \
+  --predictions runs/local/predictions.jsonl \
+  --output runs/local/evaluation
+
+cat runs/local/evaluation/metrics.json
 ```
 
-### 2. Set an LLM provider API key
+Patient-status evaluation is local and needs no model. For recommendations,
+install `.[retrieval]`, configure both recommendation examples, and run:
 
 ```bash
-export OPENAI_API_KEY=...
-# or
-export ANTHROPIC_API_KEY=...
-# or
-export GOOGLE_API_KEY=...
+python -m experiments.predict \
+  --config config/examples/recommendation.json \
+  --output runs/recommendation
+
+python -m evaluation.evaluate \
+  --config config/examples/evaluate_recommendation.json \
+  --predictions runs/recommendation/predictions.jsonl \
+  --output runs/recommendation/evaluation
 ```
 
-> You can also copy `.env.example` to `.env` and fill in your keys — `python-dotenv` will pick them up automatically.
+The recommendation evaluator uses PubMedBERT to match actions. Its first uncached
+run may download the configured embedding model. An LLM matcher is also supported;
+see [configuration](docs/configuration.md).
 
----
+## 4. Run ICU-Evo
 
-## Data Layout
+Set matching `data` and `input` settings in `memory.json` and `icu_evo.json`.
+Build memory once, then predict from it:
 
-Place parquet-readable ICU data under `data/`. The default config expects:
+```bash
+python -m experiments.create_memory \
+  --config config/examples/memory.json \
+  --output runs/memory
+
+python -m experiments.predict \
+  --config config/examples/icu_evo.json \
+  --memory-dir runs/memory \
+  --output runs/icu_evo
+```
+
+Evaluate `runs/icu_evo/predictions.jsonl` using the same evaluator as the baseline.
+Memory construction stores a snapshot at every observation window, including
+unlabeled gaps and empty windows. Baselines and evaluation run independently of
+ICU-Evo memory.
+
+## Choose a context mode
+
+| Prediction example | Context |
+| --- | --- |
+| `patient_status.json`, `recommendation.json` | Current window only |
+| `full_history.json` | Current window and all preceding ICU events |
+| `rag.json` | Current window and retrieved past windows |
+| `icu_evo.json` | Precomputed ICU-Evo memory |
+
+Every mode supports both task groups. For recommendations, set
+`task="recommendation"`, `prediction.top_k_actions`, and
+`prediction.horizon_hours` as in `recommendation.json`. The current-window mode
+requires `input.include_pre_icu_data=false`. Other modes use the configured
+pre-ICU history; ICU-Evo compresses it.
+
+Current recorded actions are masked before recommendation prediction. Memory
+recommendations use the previous snapshot plus masked current observations.
+Labels, future events, and ICU outcomes are excluded from predictor inputs.
+See [the evaluation protocol](docs/protocol.md) for exact masking, horizon,
+availability, recovery, and scoring rules.
+
+## Outputs and resume
 
 ```text
-data/mimic-demo/events       # ICU event records (vitals, labs, medications, …)
-data/mimic-demo/icu_stay     # ICU stay metadata
+runs/local/
+├── run_config.json
+├── predictions.jsonl
+├── summary.json
+├── logs/                  enabled by logging.enabled
+└── evaluation/
+    ├── metrics.json
+    ├── details.csv
+    └── matches.jsonl      recommendation matching cache
 ```
 
-Each path can be a single `.parquet` file or a directory of parquet shards — `pandas.read_parquet(...)` handles both. If your data lives elsewhere, edit `config/config.json`.
+Rerun the same command to resume. Completed prediction records, including
+failures, and completed stay memories are retained. Use a new output directory
+when changing configuration or retrying failed predictions.
 
----
+To evaluate another model, write the standard
+[prediction JSONL format](docs/predictions.md), then call the evaluator. It needs
+only predictions, labels, and evaluation settings. To evaluate new K values
+without repeating action matching, use a new output directory and
+`--reuse-matches <previous-evaluation-directory>`.
 
-## Pipeline
+## Configuration and repository layout
 
-### Block 1 — Build ICU-Evo Memory
-
-Prepare a CSV listing the ICU stays to process:
-
-```csv
-subject_id,icu_stay_id
-10006,20001
-10007,20002
-```
-
-Run memory construction:
-
-```bash
-python experiments/create_memory.py \
-  --patient-stay-ids path/to/patient_stay_ids.csv \
-  --num-workers 4 \
-  --llm-provider google \
-  --llm-model qwen/qwen3-235b-a22b-instruct-2507-maas
-```
-
-Outputs are written to:
+All experiment settings are explicit. Missing required settings fail with an
+error; example values are illustrative choices. Paths in configuration are
+relative to the working directory. The three installed commands
+`realicu-memory`, `realicu-predict`, and `realicu-evaluate` expose
+the same interfaces as the module commands above.
 
 ```text
-<memory_dir>/
+agents/       ICU-Evo observations, reasoning, and memory
+experiments/  Memory/prediction runners and context construction
+dataset/      Published data loading and window construction
+evaluation/   Action matching and scoring
+model/        Provider clients and text embeddings
+prompts/      Predictor, memory, and action-matcher prompts
+config/       Run examples, observation settings, and evaluation protocol
+docs/         Format/protocol documentation and project website
 ```
 
-To resume an interrupted run:
-
-```bash
-python experiments/create_memory.py \
-  --patient-stay-ids path/to/patient_stay_ids.csv \
-  --resume-run <memory_dir>
-```
-
----
-
-### Block 2 — Run Predictions
-
-Both scripts require an ICU-Evo memory run and an oracle results directory. **Supported context modes:** `memory` · `full_history_events` · `local_events_only` · `rag_history_events` · `all`
-
-#### Patient Status & Acute Problems
-
-`patient_status_experiment.py` predicts both **Patient Status** and **Acute Problems** in a single run.
-
-```bash
-# Single context mode
-python experiments/patient_status_experiment.py \
-  --memory-run <memory_dir> \
-  --oracle-results-dir <oracle_dir> \
-  --context-mode memory \
-  --snapshot-stride 8
-
-# All context modes in one pass
-python experiments/patient_status_experiment.py \
-  --memory-run <memory_dir> \
-  --oracle-results-dir <oracle_dir> \
-  --context-mode all
-```
-
-#### Recommended Actions
-
-```bash
-# Single context mode
-python experiments/recommendation_experiment.py \
-  --memory-run <memory_dir> \
-  --oracle-results-dir <oracle_dir> \
-  --context-mode memory \
-  --snapshot-stride 8 \
-  --top-k-actions 5 \
-  --prediction-horizon-hours 1
-
-# All context modes
-python experiments/recommendation_experiment.py \
-  --memory-run <memory_dir> \
-  --oracle-results-dir <oracle_dir> \
-  --context-mode all
-```
-
----
-
-### Block 3 — Evaluate
-
-#### Patient Status & Acute Problems
-
-```bash
-# Single mode
-python evaluation/eval_patient_status.py \
-  --icu-evo-dir <memory_dir>/patient_status/memory \
-  --gt-dir <oracle_dir>
-
-# All modes (after running --context-mode all)
-python evaluation/eval_patient_status.py \
-  --icu-evo-dir <memory_dir>/patient_status
-```
-
-#### Recommended Actions
-
-```bash
-python evaluation/eval_recommendation.py \
-  --prediction-dir <memory_dir>/recommendation_experiment \
-  --gt-dir <oracle_dir>
-```
-
-The default matcher backend is **PubMedBERT**. To specify it explicitly:
-
-```bash
-python evaluation/eval_recommendation.py \
-  --prediction-dir <memory_dir>/recommendation_experiment \
-  --gt-dir <oracle_dir> \
-  --matcher-backend pubmedbert
-```
-
----
-
-## Notes
-
-- **Oracle labels** — Oracle label generation is not included in this release. Evaluation assumes those labels already exist under `oracle_results/`.
-- **RAG mode** — `rag_history_events` requires `sentence-transformers` and an embedding model available locally or via Hugging Face.
-- **Artifacts** — Run artifacts are written under `experiment_results/` and evaluation results under `evaluation_results/`.
-
----
+`pyproject.toml` defines installation dependencies and command-line entrypoints.
 
 
-If you find this work useful, please cite our work:
+## License
+
+Copyright 2026 RealICU-Bench contributors.
+
+The project's code, prompts, configurations, and runner documentation are
+licensed under the [Apache License 2.0](LICENSE). Clinical data are distributed
+separately under their applicable terms. The project website (`docs/index.html`
+and `docs/static/`) retains its existing CC BY-SA 4.0 attribution and third-party
+asset licenses.
+
+## Citation
 
 ```bibtex
 @article{shen2026realicu,

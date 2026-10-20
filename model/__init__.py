@@ -1,1 +1,1 @@
-"""Model clients for ICU-Evo."""
+"""Lazy inference clients and a shared text encoder."""

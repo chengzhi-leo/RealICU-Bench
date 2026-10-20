@@ -1,0 +1,10 @@
+{
+  "version": "realicu-v1",
+  "window_bounds": "half_open",
+  "action_horizon": "inclusive_window_starts",
+  "actionable_event_codes": ["DRUG_START", "DRUG_PRESCRIPTION", "PROCEDURE", "BODY_INPUT", "TRANSFER"],
+  "positive_action_labels": ["best_practice", "acceptable"],
+  "stride_selection": "chronological_with_final_window",
+  "recommendation_recall": "matched_prediction_count_over_reference_count",
+  "red_flag_scope": "current_window_nonempty_available_references"
+}

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "realicu-bench"
+version = "0.1.0"
+description = "RealICU benchmark runners, evaluation, and ICU-Evo memory"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "pandas>=2", "pyarrow>=14"]
+
+[project.urls]
+Homepage = "https://chengzhi-leo.github.io/RealICU-Bench/"
+Repository = "https://github.com/chengzhi-leo/RealICU-Bench"
+
+[project.optional-dependencies]
+openai = ["openai>=1", "tiktoken>=0.7"]
+anthropic = ["anthropic>=0.40", "tiktoken>=0.7"]
+google = ["google-genai>=1", "tiktoken>=0.7"]
+llm = ["openai>=1", "anthropic>=0.40", "google-genai>=1", "tiktoken>=0.7"]
+retrieval = ["sentence-transformers>=3"]
+
+[project.scripts]
+realicu-predict = "experiments.predict:main"
+realicu-memory = "experiments.create_memory:main"
+realicu-evaluate = "evaluation.evaluate:main"
+
+[tool.setuptools.packages.find]
+namespaces = false
+include = ["agents*", "config*", "dataset*", "evaluation*", "experiments*", "model*", "prompts*", "utils*"]
+
+[tool.setuptools.package-data]
+config = ["protocols/*.json", "examples/*.json", "icu_evo_observation_config.json"]

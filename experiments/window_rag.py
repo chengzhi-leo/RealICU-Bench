@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Sequence
 
 import numpy as np
+
+from model.embeddings import TextEncoder
 
 
 def _normalize_event_lines(event_lines: Sequence[str]) -> List[str]:
@@ -12,36 +13,6 @@ def _normalize_event_lines(event_lines: Sequence[str]) -> List[str]:
     if normalized:
         return normalized
     return ["(No events)"]
-
-
-def _normalize_embeddings(matrix: np.ndarray) -> np.ndarray:
-    array = np.asarray(matrix, dtype=np.float32)
-    if array.ndim != 2:
-        raise ValueError(f"Expected 2D embeddings, got shape={array.shape}")
-    norms = np.linalg.norm(array, axis=1, keepdims=True)
-    safe_norms = np.where(norms > 0, norms, 1.0)
-    return array / safe_norms
-
-
-def _resolve_local_hf_snapshot(model_name: str) -> str:
-    candidate = str(model_name).strip()
-    if not candidate:
-        raise ValueError("model_name must be non-empty")
-    if "/" not in candidate:
-        return candidate
-    if Path(candidate).exists():
-        return candidate
-    repo_dir = Path.home() / ".cache" / "huggingface" / "hub" / f"models--{candidate.replace('/', '--')}"
-    refs_main = repo_dir / "refs" / "main"
-    if not refs_main.exists():
-        return candidate
-    snapshot_id = refs_main.read_text(encoding="utf-8").strip()
-    if not snapshot_id:
-        return candidate
-    snapshot_dir = repo_dir / "snapshots" / snapshot_id
-    if snapshot_dir.exists():
-        return str(snapshot_dir)
-    return candidate
 
 
 @dataclass(frozen=True)
@@ -125,67 +96,12 @@ def render_rag_event_context(
     return "\n".join(lines)
 
 
-class SentenceTransformerWindowEncoder:
-    def __init__(
-        self,
-        *,
-        model_name: str,
-        device: Optional[str],
-        batch_size: int,
-    ):
-        self.model_name = str(model_name)
-        self.device = self._resolve_device(model_name=self.model_name, device=device)
-        self.batch_size = int(batch_size)
-        if self.batch_size < 1:
-            raise ValueError(f"batch_size must be >= 1, got {self.batch_size}")
-        self._model = None
-
-    @staticmethod
-    def _resolve_device(*, model_name: str, device: Optional[str]) -> Optional[str]:
-        if device is not None:
-            return str(device)
-        model_name_normalized = str(model_name).strip().lower()
-        if "pubmedbert" in model_name_normalized:
-            return "cuda"
-        return None
-
-    @property
-    def model(self):
-        if self._model is None:
-            try:
-                from sentence_transformers import SentenceTransformer
-            except ImportError as exc:
-                raise ImportError(
-                    "sentence-transformers is required for rag_history_events mode. "
-                    "Install with: pip install sentence-transformers"
-                ) from exc
-            resolved_model_name = _resolve_local_hf_snapshot(self.model_name)
-            self._model = SentenceTransformer(
-                resolved_model_name,
-                device=self.device,
-                local_files_only=True,
-            )
-        return self._model
-
-    def encode_texts(self, texts: Sequence[str]) -> np.ndarray:
-        if not texts:
-            return np.zeros((0, 0), dtype=np.float32)
-        embeddings = self.model.encode(
-            [str(text) for text in texts],
-            batch_size=int(self.batch_size),
-            convert_to_numpy=True,
-            normalize_embeddings=False,
-            show_progress_bar=False,
-        )
-        return _normalize_embeddings(np.asarray(embeddings, dtype=np.float32))
-
-
 class IncrementalWindowRAGRetriever:
     def __init__(
         self,
         *,
         window_records: Sequence[RAGWindowRecord],
-        encoder: SentenceTransformerWindowEncoder,
+        encoder: TextEncoder,
         top_k: int,
     ):
         self.encoder = encoder

@@ -1,1 +1,1 @@
-"""Shared utilities for ICU-Evo."""
+"""Shared artifact, event, and JSON utilities."""

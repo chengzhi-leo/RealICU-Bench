@@ -21,10 +21,10 @@ Predicted actions:
 {predicted_actions}
 
 Ground Truth Recommended actions:
-{oracle_recommended_actions}
+{reference_recommended_actions}
 
 Ground Truth red-flag actions:
-{oracle_red_flag_actions}
+{reference_red_flag_actions}
 
 ## Output (JSON only)
 {
@@ -42,39 +42,4 @@ Ground Truth red-flag actions:
 
 ## Important Notes
 A predicted action may match zero, one, or multiple actions in each target list.
-"""
-
-
-def get_active_problem_matcher_prompt() -> str:
-    return """
-You are a clinical matcher for ICU active problems.
-
-Match each predicted active problem to Ground Truth (GT) active problems if they refer to the same clinical condition.
-
-## Match if:
-- Same or synonymous medical condition (e.g., AKI = acute kidney injury)
-- Different wording of the same problem (e.g., respiratory failure = respiratory insufficiency)
-- Reasonable differences in granularity (e.g., sepsis vs septic shock)
-
-## Do NOT match if:
-- Different clinical conditions (e.g., pneumonia vs heart failure)
-- One is not a medical problem
-- Negation vs presence of disease
-
-## Input
-Predicted active problems:
-{predicted_problems}
-
-GT Active Problems:
-{oracle_active_problems}
-
-## Output (JSON only)
-{
-  "problem_matches": [
-    {"pred_idx": 0, "gt_indices": [...]}
-  ]
-}
-
-## Important Notes
-Each predicted problem may match zero, one, or multiple GT problems.
 """

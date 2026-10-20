@@ -1,4 +1,4 @@
-"""Shared event-line formatting helpers for Oracle prompts and parser outputs."""
+"""Shared clinical event formatting for model inputs."""
 
 from __future__ import annotations
 
@@ -38,11 +38,10 @@ def format_event_line(
     """
     Format one event into a compact stable line.
 
-    The default behavior matches Oracle prompt context rendering.
+    Event identifiers refer to the published ICU event sequence.
     """
     parts: list[str] = []
 
-    # Prefer ICU-local stable IDs across windows.
     event_id = event.get("icu_event_index")
     if _is_missing_value(event_id):
         event_id = event.get("event_index")

@@ -1,0 +1,58 @@
+{
+  "protocol": "realicu-v1",
+  "task": "patient_status",
+  "context_mode": "rag_history_events",
+  "data": {
+    "root": "data/realicu",
+    "label_set": "gold",
+    "stay_ids": [
+      "10001884_37510196"
+    ]
+  },
+  "input": {
+    "current_window_hours": 0.5,
+    "observation_hours": null,
+    "include_pre_icu_data": false,
+    "pre_icu_history_hours": 48,
+    "excluded_event_codes": [
+      "NOTE_DISCHARGESUMMARY",
+      "META_DEATH",
+      "LEAVE_ICU",
+      "LEAVE_HOSPITALIZATION"
+    ]
+  },
+  "prediction": {
+    "snapshot_stride": 1
+  },
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "connection": {
+      "backend": "api",
+      "base_url": null
+    },
+    "temperature": 0,
+    "max_tokens": 4096,
+    "max_input_tokens": 190000,
+    "token_encoding": "cl100k_base",
+    "max_retries": 3,
+    "retry_base_delay_seconds": 1,
+    "retry_max_delay_seconds": 30,
+    "request_timeout_seconds": 300
+  },
+  "execution": {
+    "num_workers": 1
+  },
+  "logging": {
+    "enabled": true
+  },
+  "rag": {
+    "top_k_windows": 3,
+    "encoder": {
+      "model_name": "NeuML/pubmedbert-base-embeddings",
+      "device": "cpu",
+      "batch_size": 64,
+      "local_files_only": false
+    }
+  }
+}

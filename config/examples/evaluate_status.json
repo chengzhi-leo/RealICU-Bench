@@ -1,0 +1,8 @@
+{
+  "protocol": "realicu-v1",
+  "task": "patient_status",
+  "labels_dir": "data/realicu/gold/labels",
+  "execution": {
+    "num_workers": 1
+  }
+}

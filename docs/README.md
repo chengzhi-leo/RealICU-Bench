@@ -2,12 +2,18 @@
 
 This directory contains the GitHub Pages source for the RealICU project website.
 
+Runner documentation:
+
+- [Configuration](configuration.md)
+- [Prediction format](predictions.md)
+- [Evaluation protocol](protocol.md)
+
 ## What To Edit
 
 - `index.html` contains the page content and structure.
 - `static/css/` contains site styling.
 - `static/js/` contains page behavior.
-- `static/images/`, `static/pdfs/`, and `static/videos/` contain media assets.
+- `static/images/` contains the project's figures and images.
 
 ## Publishing
 

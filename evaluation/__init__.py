@@ -1,1 +1,1 @@
-"""Evaluation scripts and helpers for ICU-Evo."""
+"""Independent prediction validation, matching, and benchmark scores."""

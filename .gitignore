@@ -1,7 +1,12 @@
 .DS_Store
 **/.DS_Store
 .env
+.env.*
+!.env.example
 .venv/
+.agents/
+.aws/
+.codex/
 __pycache__/
 *.pyc
 *.pyo
@@ -13,3 +18,9 @@ evaluation_results/
 logs/
 tmp/
 docs/slides.html
+runs/
+*.egg-info/
+build/
+dist/
+/data/*
+!/data/README.md

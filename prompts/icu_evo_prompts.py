@@ -1,5 +1,9 @@
 """Prompt templates for the ICU-Evo multi-agent pipeline."""
 
+import json
+from typing import Any, Dict
+
+
 
 def get_episode_agent_prompt() -> str:
     return """You are an ICU assessment agent. The observation agent has already extracted window-level evidence for you. You compress {k} consecutive 30-minute windows ({duration} hours total) into one assessment summary and identify the block's critical events.
@@ -151,4 +155,40 @@ Output only in JSON format:
     }
   ]
 }
+"""
+
+
+def format_pre_icu_compression_prompt(pre_icu_history: Dict[str, Any], max_summary_chars: int) -> str:
+    hours = pre_icu_history["history_hours"]
+    payload = {
+        "source": pre_icu_history["source"].strip(),
+        "items": int(pre_icu_history["items"]),
+        "history_hours": float(hours) if hours is not None else 0.0,
+        "historical_discharge_summary_items": int(pre_icu_history["historical_discharge_summary_items"]),
+        "content": pre_icu_history["content"].strip(),
+    }
+    payload_json = json.dumps(payload, indent=2, ensure_ascii=False)
+    return f"""You compress pre-ICU history for repeated ICU window evaluation prompts.
+
+Return JSON only:
+{{
+  "compressed_pre_icu_history": "Concise summary (<= {max_summary_chars} chars)."
+}}
+
+Requirements:
+- Preserve clinically important signal; remove boilerplate.
+- Focus on:
+  1) Baseline vulnerability (major comorbidities, frailty, immunosuppression)
+  2) Pre-ICU trajectory (course, worsening/improving, response to treatments)
+  3) Acute severity signals (organ dysfunction, critical abnormal findings)
+  4) Working diagnoses if evident
+
+- Prefer interpreted clinical states over raw numbers (e.g. 'worsening hypoxia despite O2').
+- Mention uncertainty if source text is sparse or conflicting.
+- Do not invent events or outcomes not present in input.
+- Keep the summary reusable across all subsequent ICU windows.
+- Include critical patient-specific constraints (e.g.treatment-limiting allergies) if present.
+
+Pre-ICU history payload:
+{payload_json}
 """
