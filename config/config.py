@@ -36,11 +36,14 @@ class Config:
             raise ValueError(f"{key} must be finite and >= {minimum}")
         return value
 
-    def positive_int(self, key: str) -> int:
+    def integer(self, key: str, *, minimum: int) -> int:
         value = self.require(key, int)
-        if type(value) is not int or value < 1:
-            raise ValueError(f"{key} must be a positive integer")
+        if type(value) is not int or value < minimum:
+            raise ValueError(f"{key} must be an integer >= {minimum}")
         return value
+
+    def positive_int(self, key: str) -> int:
+        return self.integer(key, minimum=1)
 
     def snapshot(self) -> dict:
         return copy.deepcopy(self.values)

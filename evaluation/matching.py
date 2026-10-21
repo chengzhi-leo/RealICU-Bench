@@ -1,4 +1,4 @@
-"""Action matching without experiment or agent dependencies."""
+"""Action and active-risk matching without experiment or agent dependencies."""
 
 import json
 
@@ -6,7 +6,7 @@ import numpy as np
 
 from model.embeddings import TextEncoder
 from model.llms import LLMClient
-from prompts.action_matcher_prompts import get_action_matcher_prompt
+from prompts.action_matcher_prompts import get_action_matcher_prompt, get_active_risk_matcher_prompt
 from utils.json_parse import parse_json_dict_or_raise
 
 
@@ -18,7 +18,7 @@ def action_text(action: dict) -> str:
     return description or name
 
 
-def matching_prompt(predictions: list[dict], actions: list[dict], red_flags: list[dict]) -> str:
+def action_matching_prompt(predictions: list[dict], actions: list[dict], red_flags: list[dict]) -> str:
     payloads = [[{
         "prediction_index": index,
         "action_name": action["action_name"].strip(),
@@ -32,6 +32,14 @@ def matching_prompt(predictions: list[dict], actions: list[dict], red_flags: lis
     for name, payload in zip(("predicted_actions", "reference_recommended_actions", "reference_red_flag_actions"), payloads):
         prompt = prompt.replace("{" + name + "}", json.dumps(payload, ensure_ascii=False, indent=2))
     return prompt
+
+
+def risk_matching_prompt(predictions: list[str], references: list[str]) -> str:
+    predicted = [{"pred_idx": index, "problem": text} for index, text in enumerate(predictions)]
+    reference = [{"gt_index": index, "problem": text} for index, text in enumerate(references)]
+    return get_active_risk_matcher_prompt().replace(
+        "{predicted_problems}", json.dumps(predicted, ensure_ascii=False, indent=2),
+    ).replace("{reference_active_risks}", json.dumps(reference, ensure_ascii=False, indent=2))
 
 
 def matched_pairs(section, num_predictions: int, num_references: int) -> list[dict]:
@@ -70,7 +78,7 @@ def matched_pairs(section, num_predictions: int, num_references: int) -> list[di
     return pairs
 
 
-class ActionMatcher:
+class Matcher:
     def __init__(self, settings: dict):
         self.settings = settings
         self.backend = settings["backend"]
@@ -82,26 +90,31 @@ class ActionMatcher:
         elif self.backend == "llm":
             self.client = LLMClient(**settings["llm"])
         else:
-            raise ValueError(f"Unsupported action matcher: {self.backend}")
+            raise ValueError(f"Unsupported matcher: {self.backend}")
 
-    def match(self, predictions: list[dict], actions: list[dict], red_flags: list[dict]) -> dict:
+    def embedding_pairs(self, predicted_texts: list[str], reference_texts: list[str]) -> list[dict]:
+        if not reference_texts:
+            return []
+        similarities = self.encoder.encode_texts(predicted_texts) @ self.encoder.encode_texts(reference_texts).T
+        pairs = []
+        for index, row in enumerate(similarities):
+            best = int(np.argmax(row))
+            if row[best] >= self.threshold:
+                pairs.append({"prediction_index": index, "gt_index": best})
+        return pairs
+
+    def match_actions(self, predictions: list[dict], actions: list[dict], red_flags: list[dict]) -> dict:
         result = {"recommended_pairs": [], "red_flag_pairs": [], "usage": {"input_tokens": 0, "output_tokens": 0}}
         if not predictions or (not actions and not red_flags):
             return result
         predicted_texts = [action_text(action) for action in predictions]
         references = [[item["gt_action_text"] for item in group] for group in (actions, red_flags)]
         if self.backend == "pubmedbert":
-            embeddings = self.encoder.encode_texts(predicted_texts)
-            for key, texts in zip(("recommended_pairs", "red_flag_pairs"), references):
-                if not texts:
-                    continue
-                similarities = embeddings @ self.encoder.encode_texts(texts).T
-                for index, row in enumerate(similarities):
-                    best = int(np.argmax(row))
-                    if row[best] >= self.threshold:
-                        result[key].append({"prediction_index": index, "gt_index": best})
+            result["recommended_pairs"], result["red_flag_pairs"] = (
+                self.embedding_pairs(predicted_texts, texts) for texts in references
+            )
             return result
-        response = self.client.chat(matching_prompt(predictions, actions, red_flags))
+        response = self.client.chat(action_matching_prompt(predictions, actions, red_flags))
         parsed = parse_json_dict_or_raise(response["content"])
         result["usage"] = response["usage"]
         sections = (parsed.get("recommended_action_matches"), parsed.get("red_flag_matches")) if (
@@ -112,4 +125,18 @@ class ActionMatcher:
             sections, references,
         ):
             result[key] = matched_pairs(section, len(predictions), len(texts))
+        return result
+
+    def match_risks(self, predictions: list[str], references: list[str]) -> dict:
+        result = {"pairs": [], "usage": {"input_tokens": 0, "output_tokens": 0}}
+        if not predictions or not references:
+            return result
+        if self.backend == "pubmedbert":
+            result["pairs"] = self.embedding_pairs(predictions, references)
+            return result
+        response = self.client.chat(risk_matching_prompt(predictions, references))
+        parsed = parse_json_dict_or_raise(response["content"])
+        section = next((parsed[key] for key in ("problem_matches", "matches") if isinstance(parsed.get(key), list)), None)
+        result["pairs"] = matched_pairs(section, len(predictions), len(references))
+        result["usage"] = response["usage"]
         return result

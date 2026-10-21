@@ -1,7 +1,7 @@
 {
   "protocol": "realicu-v1",
   "task": "patient_status",
-  "context_mode": "local_events_only",
+  "context_mode": "rag_history_events",
   "data": {
     "root": "data/realicu",
     "label_set": "gold",
@@ -14,6 +14,7 @@
     "observation_hours": null,
     "include_pre_icu_data": false,
     "pre_icu_history_hours": 48,
+    "pre_icu_discharge_summaries": 2,
     "excluded_event_codes": [
       "NOTE_DISCHARGESUMMARY",
       "META_DEATH",
@@ -45,5 +46,14 @@
   },
   "logging": {
     "enabled": true
+  },
+  "rag": {
+    "top_k_windows": 3,
+    "encoder": {
+      "model_name": "NeuML/pubmedbert-base-embeddings",
+      "device": "cpu",
+      "batch_size": 64,
+      "local_files_only": false
+    }
   }
 }

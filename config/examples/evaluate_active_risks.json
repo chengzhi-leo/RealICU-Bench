@@ -1,0 +1,18 @@
+{
+  "protocol": "realicu-v1",
+  "task": "active_risks",
+  "labels_dir": "data/realicu/gold/labels",
+  "execution": {
+    "num_workers": 1
+  },
+  "matcher": {
+    "backend": "pubmedbert",
+    "encoder": {
+      "model_name": "NeuML/pubmedbert-base-embeddings",
+      "device": "cpu",
+      "batch_size": 64,
+      "local_files_only": false
+    },
+    "similarity_threshold": 0.5
+  }
+}

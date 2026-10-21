@@ -1,7 +1,7 @@
 {
   "protocol": "realicu-v1",
-  "task": "patient_status",
-  "context_mode": "memory",
+  "task": "recommendation",
+  "context_mode": "rag_history_events",
   "data": {
     "root": "data/realicu",
     "label_set": "gold",
@@ -12,8 +12,9 @@
   "input": {
     "current_window_hours": 0.5,
     "observation_hours": null,
-    "include_pre_icu_data": true,
+    "include_pre_icu_data": false,
     "pre_icu_history_hours": 48,
+    "pre_icu_discharge_summaries": 2,
     "excluded_event_codes": [
       "NOTE_DISCHARGESUMMARY",
       "META_DEATH",
@@ -22,7 +23,9 @@
     ]
   },
   "prediction": {
-    "snapshot_stride": 1
+    "snapshot_stride": 1,
+    "top_k_actions": 5,
+    "horizon_hours": 1
   },
   "llm": {
     "provider": "openai",
@@ -45,5 +48,14 @@
   },
   "logging": {
     "enabled": true
+  },
+  "rag": {
+    "top_k_windows": 3,
+    "encoder": {
+      "model_name": "NeuML/pubmedbert-base-embeddings",
+      "device": "cpu",
+      "batch_size": 64,
+      "local_files_only": false
+    }
   }
 }

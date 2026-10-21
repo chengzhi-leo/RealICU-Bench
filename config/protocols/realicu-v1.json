@@ -1,10 +1,15 @@
 {
   "version": "realicu-v1",
   "window_bounds": "half_open",
-  "action_horizon": "inclusive_window_starts",
+  "observation_windows": "nonempty_only",
+  "pre_icu_history": "lookback_events_and_recent_discharge_summaries",
   "actionable_event_codes": ["DRUG_START", "DRUG_PRESCRIPTION", "PROCEDURE", "BODY_INPUT", "TRANSFER"],
   "positive_action_labels": ["best_practice", "acceptable"],
   "stride_selection": "chronological_with_final_window",
+  "recommendation_windows": "nonempty_action_review_after_first_observation_with_positive_action_in_inclusive_horizon",
+  "action_reference_scope": "current_window",
   "recommendation_recall": "matched_prediction_count_over_reference_count",
-  "red_flag_scope": "current_window_nonempty_available_references"
+  "red_flag_scope": "current_window_with_positive_action_references",
+  "hrr": "stay_mean_of_matched_over_considered_predictions",
+  "active_risk_recall": "matched_reference_count_over_reference_count"
 }

@@ -16,13 +16,13 @@ def macro_f1(truth: list[str], predictions: list[str]) -> float:
 def score(record: dict, window: dict) -> dict:
     truth = window["reference_labels"]["patient_assessment"]["overall"]["label"]
     prediction = "inference_error" if record["error"] else record["prediction"]["patient_assessment"]["overall"]["label"]
-    return {"true_label": truth, "pred_label": prediction, "is_correct": int(truth == prediction)}
+    return {"true_label": truth, "pred_label": prediction, "correct": int(truth == prediction)}
 
 
 def summarize(frame: pd.DataFrame) -> dict:
+    by_stay = frame.groupby("stay_id")["correct"].mean()
     return {
-        "num_windows": len(frame), "num_patients": frame["stay_id"].nunique(),
-        "micro_acc": float(frame["is_correct"].mean()),
-        "macro_acc": float(frame.groupby("stay_id")["is_correct"].mean().mean()),
-        "macro_f1": macro_f1(frame["true_label"].tolist(), frame["pred_label"].tolist()),
+        "num_windows": len(frame), "num_stays": len(by_stay),
+        "acc": float(by_stay.mean()),
+        "f1": macro_f1(frame["true_label"].tolist(), frame["pred_label"].tolist()),
     }

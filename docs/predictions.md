@@ -9,7 +9,7 @@ Two task groups correspond to the two prediction prompts:
 
 | `task` | Required contents of `prediction` | Scored outputs |
 | --- | --- | --- |
-| `patient_status` | `patient_assessment.overall.label` and list-valued `patient_assessment.active_risks` | Overall patient status |
+| `patient_status` | `patient_assessment.overall.label` and list-valued `patient_assessment.active_risks` | Overall patient status (`task="patient_status"`) and acute problems (`task="active_risks"`) |
 | `recommendation` | List-valued `recommended_actions` and `red_flags` | Recommended actions, including matches against reference red flags |
 
 A patient-status record:
@@ -19,7 +19,9 @@ A patient-status record:
 ```
 
 Valid status labels are `stable`, `improving`, `deteriorating`, and
-`insufficient_data`. The evaluator independently checks reference availability.
+`insufficient_data`. Each active risk is an object with a `risk_name`, as in the
+prediction prompt, or a plain string. The evaluator independently checks
+reference availability.
 
 A recommendation record:
 
@@ -47,9 +49,9 @@ Inputs, reference answers, trajectory paths, and memory paths are not part of
 the prediction contract.
 
 A runner-generated file has a neighboring `run_config.json`. The evaluator checks
-its task, protocol, and recommendation horizon against evaluation settings.
-External models can supply just the JSONL file; their evaluation configuration
-must explicitly describe the intended horizon and K values.
+its task and protocol against evaluation settings. External models can supply
+just the JSONL file; recommendation evaluation considers the first
+`evaluation.top_k_actions` actions of each record.
 
 # Run artifacts
 

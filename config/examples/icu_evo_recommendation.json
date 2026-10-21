@@ -1,5 +1,7 @@
 {
   "protocol": "realicu-v1",
+  "task": "recommendation",
+  "context_mode": "memory",
   "data": {
     "root": "data/realicu",
     "label_set": "gold",
@@ -12,12 +14,18 @@
     "observation_hours": null,
     "include_pre_icu_data": true,
     "pre_icu_history_hours": 48,
+    "pre_icu_discharge_summaries": 2,
     "excluded_event_codes": [
       "NOTE_DISCHARGESUMMARY",
       "META_DEATH",
       "LEAVE_ICU",
       "LEAVE_HOSPITALIZATION"
     ]
+  },
+  "prediction": {
+    "snapshot_stride": 1,
+    "top_k_actions": 5,
+    "horizon_hours": 1
   },
   "llm": {
     "provider": "openai",
@@ -40,15 +48,5 @@
   },
   "logging": {
     "enabled": true
-  },
-  "icu_evo": {
-    "max_working_windows": 3,
-    "max_insights": 10,
-    "max_trajectory_entries": 96,
-    "episode_block_windows": 12,
-    "insight_block_windows": 24,
-    "observation_config_path": "config/icu_evo_observation_config.json",
-    "schema_max_attempts": 4,
-    "pre_icu_summary_chars": 1800
   }
 }

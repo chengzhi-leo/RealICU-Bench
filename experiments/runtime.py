@@ -31,7 +31,8 @@ def window_options(config: Config) -> dict:
         "current_window_hours": config.number("input.current_window_hours", minimum=0),
         "include_pre_icu_data": config.require("input.include_pre_icu_data", bool),
         "use_first_n_hours_after_icu": config.number("input.observation_hours", minimum=0, allow_none=True),
-        "pre_icu_history_hours": config.number("input.pre_icu_history_hours", minimum=0, allow_none=True),
+        "pre_icu_history_hours": config.number("input.pre_icu_history_hours", minimum=0),
+        "pre_icu_discharge_summaries": config.integer("input.pre_icu_discharge_summaries", minimum=0),
         "excluded_event_codes": codes,
     }
     if options["current_window_hours"] == 0:

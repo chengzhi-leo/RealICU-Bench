@@ -1,11 +1,11 @@
-"""Run a baseline or ICU-Evo predictor: python -m experiments.predict --help."""
+"""Run a local-window, history, RAG, or ICU-Evo predictor."""
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from config.config import Config
-from dataset.labels import load_labels, window_interval
+from dataset.labels import action_targets, collect_action_targets, load_labels, window_interval
 from evaluation.predictions import TASKS, append_prediction, read_predictions, validate_prediction
 from experiments.contexts import build_context
 from experiments.runtime import CONTEXT_MODES, load_dataset, observation_windows, run_settings, select_with_stride, window_options
@@ -81,16 +81,21 @@ def run(config: Config, output: str | Path, *, memory_dir: str | Path | None = N
             (round(window["hours_since_admission"], 6), round(window["hours_since_admission"] + window["current_window_hours"], 6)): index
             for index, window in enumerate(windows)
         }
-        eligible = []
+        eligible, positives = [], {}
         for label in payload["window_outputs"]:
             available = label["label_availability"]
-            supported = (available["patient_status"] or available["active_risks"]) if task == "patient_status" else (
-                available["recommended_action"] or available["red_flags"]
-            )
             interval = window_interval(payload, label)
+            if task == "patient_status":
+                supported = available["patient_status"] or available["active_risks"]
+            else:
+                positives[interval] = action_targets(payload, label)[0]
+                supported = available["recommended_action"] and bool(label["reference_labels"]["action_review"]["evaluations"])
             if supported and interval in by_interval:
-                eligible.append((label["sample_id"], by_interval[interval]))
-        selected = [item for item in select_with_stride(eligible, stride) if (item[0], task) not in completed]
+                eligible.append((label["sample_id"], by_interval[interval], interval))
+        selected = select_with_stride(eligible, stride)
+        if task == "recommendation":
+            selected = [item for item in selected if item[1] > 0 and collect_action_targets(positives, item[2][0], horizon)]
+        selected = [item[:2] for item in selected if (item[0], task) not in completed]
         if not selected:
             return []
         client = client_factory(**llm)

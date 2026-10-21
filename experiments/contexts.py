@@ -17,15 +17,14 @@ def event_text(events: list[dict]) -> str:
 
 
 def memory_context(snapshot: dict, previous_snapshot: dict | None, window: dict, task: str, codes: list[str]) -> str:
-    from agents.memory import ICUEvoMemory, WorkingWindow
+    from agents.memory import WorkingWindow
     from agents.rendering import render_snapshot
 
     if task == "patient_status":
         return render_snapshot(snapshot)
     if previous_snapshot is None:
-        context = ICUEvoMemory(patient_metadata=deepcopy(snapshot["patient_metadata"])).to_dict()
-    else:
-        context = deepcopy(previous_snapshot)
+        raise ValueError("Memory recommendation requires the previous observation snapshot")
+    context = deepcopy(previous_snapshot)
     current = WorkingWindow(
         window_id=snapshot["last_processed_window_index"],
         start_hour=window["hours_since_admission"],

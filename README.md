@@ -1,4 +1,6 @@
-# RealICU-Bench [Neurips 2026]
+# RealICU: Do LLM Agents Understand Long-Context ICU Data? A Benchmark Beyond Behavior Imitation [NeurIPS 2026]
+
+🎉🎉🎉 Updates: RealICU has been accepted at NeurIPS 2026 
 
 <div align="center">
 
@@ -8,46 +10,51 @@
 
 </div>
 
-**RealICU: Do LLM Agents Understand Long-Context ICU Data? A Benchmark Beyond Behavior Imitation**
+
 
 RealICU evaluates ICU reasoning against hindsight annotations rather than treating
 recorded clinical actions as optimal decisions. RealICU-Gold contains 930 windows
 from 94 ICU stays; RealICU-Scale contains 11,862 windows from the same cohort.
 
 This repository provides prediction runners, evaluation, and the ICU-Evo
-structured-memory agent. It supports four context modes: current events, full
+structured-memory agent. It supports four context modes: current local window, full
 history, retrieved history (RAG), and ICU-Evo memory.
 
 | Task | Output | Scoring |
 | --- | --- | --- |
-| Patient Status | Overall clinical status | Accuracy, mean per-stay accuracy, macro F1 |
-| Acute Problems | Active clinical risks | Auxiliary output; no independent scorer |
-| Recommended Actions | Ordered treatment recommendations | Hit, precision, recall at K |
-| Red Flag Actions | Actions to avoid | Harmful recommendation rate: proposed actions matched against reference red flags |
+| Patient Status | Overall clinical status | Accuracy, F1 |
+| Acute Problems | Active clinical risks | Hit, Recall |
+| Recommended Actions | Top-5 ordered treatment recommendations | Hit, Recall |
+| Red Flag Actions | Actions to avoid | Harmful recommendation rate (HRR) |
 
-Gold and Scale share trajectories and are evaluation sets, not train/test splits.
-Clinical data and experiment outputs are not included in this repository.
+Accuracy, hit, recall, and HRR are averaged within each stay and then across
+stays; F1 is the macro F1 over status classes. `metrics.json` reports them as
+`acc`, `f1`, `hit`, `recall`, and `hrr`.
+
+RealICU-Gold and RealICU-Scale share MIMIC-IV based patient trajectories and are evaluation sets only.
+
 
 ## 1. Install
 
-Tested with Python 3.11. Run these commands from the repository root:
+Run these commands from the repository root:
 
 ```bash
-python -m pip install -e ".[openai]"
+python -m pip install -e ".[openai,retrieval]"
 export OPENAI_API_KEY="your-api-key"
 ```
 
-Use `.[anthropic]` or `.[google]` for another provider, `.[retrieval]` for RAG and
-PubMedBERT matching. Extras can be combined, for example
-`python -m pip install -e ".[openai,retrieval]"`.
-
-Credentials come from environment variables. The package does not load `.env`
-automatically. Credential names, provider settings, and Vertex settings are
-described in [configuration](docs/configuration.md).
+`retrieval` provides the PubMedBERT encoder used by RAG and by acute-problem and
+action matching. Use `anthropic` or `google` instead of `openai` for another
+provider. Credentials come from environment variables; the package does not load
+`.env` automatically. Credential names, provider settings, and Vertex settings
+are described in [configuration](docs/configuration.md).
 
 ## 2. Prepare the dataset
 
-Download the published RealICU data separately and preserve this layout:
+RealICU uses MIMIC-IV derived data. To access it, visit PhysioNet, complete the
+[CITI training](https://www.citiprogram.org/), and request access to the MIMIC-IV
+database. After obtaining access, download the RealICU data and preserve this
+layout:
 
 ```text
 data/realicu/
@@ -58,93 +65,97 @@ data/realicu/
 └── scale/labels/<stay_id>.json
 ```
 
-Set `data.root` and `data.label_set` in your prediction configuration. Examples
-select one stay; set `data.stay_ids` to `null` for all stays. Evaluation uses
-`labels_dir`, which must point to the corresponding `gold/labels` or
-`scale/labels` directory. Only the published data format is supported.
+Only the published data format is supported.
 
-## 3. Run a baseline
+## 3. Run an experiment
 
-Edit `config/examples/patient_status.json` for your data, provider, model, and
-input settings, and `config/examples/evaluate_status.json` for your labels:
+An experiment is one prediction run followed by evaluation. `experiments.predict`
+is the single entry point; its configuration selects the context mode and the
+task. Choose a mode:
 
-```bash
-python -m experiments.predict \
-  --config config/examples/patient_status.json \
-  --output runs/local
+| Mode | Model input | Configuration in `config/examples/` | Before prediction |
+| --- | --- | --- | --- |
+| Local window | Current window only | `local_<task>.json` | — |
+| Full history | Current window and all preceding ICU events | `full_history_<task>.json` | — |
+| Retrieval (RAG) | Current window and the most similar past windows | `rag_<task>.json` | — |
+| ICU-Evo | ICU-Evo evolving memory | `icu_evo_<task>.json` | Build memory once |
 
-python -m evaluation.evaluate \
-  --config config/examples/evaluate_status.json \
-  --predictions runs/local/predictions.jsonl \
-  --output runs/local/evaluation
+`<task>` is `status` (patient status and acute problems) or `recommendation`
+(recommended actions and red flags). Before running, edit `data` and `llm` in the
+chosen configuration: the examples select one gold stay (`data.stay_ids`; use
+`null` for all stays) and an example model.
 
-cat runs/local/evaluation/metrics.json
-```
-
-Patient-status evaluation is local and needs no model. For recommendations,
-install `.[retrieval]`, configure both recommendation examples, and run:
-
-```bash
-python -m experiments.predict \
-  --config config/examples/recommendation.json \
-  --output runs/recommendation
-
-python -m evaluation.evaluate \
-  --config config/examples/evaluate_recommendation.json \
-  --predictions runs/recommendation/predictions.jsonl \
-  --output runs/recommendation/evaluation
-```
-
-The recommendation evaluator uses PubMedBERT to match actions. Its first uncached
-run may download the configured embedding model. An LLM matcher is also supported;
-see [configuration](docs/configuration.md).
-
-## 4. Run ICU-Evo
-
-Set matching `data` and `input` settings in `memory.json` and `icu_evo.json`.
-Build memory once, then predict from it:
+**Step 1, ICU-Evo only: build memory.** Build it once and reuse it for both tasks
+and for any prediction model:
 
 ```bash
 python -m experiments.create_memory \
-  --config config/examples/memory.json \
+  --config config/examples/icu_evo_memory.json \
   --output runs/memory
-
-python -m experiments.predict \
-  --config config/examples/icu_evo.json \
-  --memory-dir runs/memory \
-  --output runs/icu_evo
 ```
 
-Evaluate `runs/icu_evo/predictions.jsonl` using the same evaluator as the baseline.
-Memory construction stores a snapshot at every observation window, including
-unlabeled gaps and empty windows. Baselines and evaluation run independently of
-ICU-Evo memory.
+**Step 2: predict.**
 
-## Choose a context mode
+```bash
+python -m experiments.predict \
+  --config config/examples/rag_status.json \
+  --output runs/rag_status
+```
 
-| Prediction example | Context |
-| --- | --- |
-| `patient_status.json`, `recommendation.json` | Current window only |
-| `full_history.json` | Current window and all preceding ICU events |
-| `rag.json` | Current window and retrieved past windows |
-| `icu_evo.json` | Precomputed ICU-Evo memory |
+For ICU-Evo, also pass the memory:
 
-Every mode supports both task groups. For recommendations, set
-`task="recommendation"`, `prediction.top_k_actions`, and
-`prediction.horizon_hours` as in `recommendation.json`. The current-window mode
-requires `input.include_pre_icu_data=false`. Other modes use the configured
-pre-ICU history; ICU-Evo compresses it.
+```bash
+python -m experiments.predict \
+  --config config/examples/icu_evo_status.json \
+  --memory-dir runs/memory \
+  --output runs/icu_evo_status
+```
 
-Current recorded actions are masked before recommendation prediction. Memory
-recommendations use the previous snapshot plus masked current observations.
-Labels, future events, and ICU outcomes are excluded from predictor inputs.
-See [the evaluation protocol](docs/protocol.md) for exact masking, horizon,
-availability, recovery, and scoring rules.
+**Step 3: evaluate.** Choose the evaluation configuration by task and set its
+`labels_dir` to the label set used for prediction:
+
+| Prediction | Evaluation configuration | Scores |
+| --- | --- | --- |
+| `*_status` | `evaluate_status.json` | Patient status |
+| `*_status` | `evaluate_active_risks.json` | Acute problems |
+| `*_recommendation` | `evaluate_recommendation.json` | Recommended actions and HRR |
+
+```bash
+python -m evaluation.evaluate \
+  --config config/examples/evaluate_status.json \
+  --predictions runs/rag_status/predictions.jsonl \
+  --output runs/rag_status/evaluation
+
+cat runs/rag_status/evaluation/metrics.json
+```
+
+Patient-status scoring needs no model. Acute problems and actions are matched to
+the references with PubMedBERT, which may be downloaded on first use; an LLM
+matcher is also supported.
+
+### What the modes see
+
+- Labels, future events, and ICU outcomes are never model inputs. Before
+  recommendation, the current window's recorded actions are masked; ICU-Evo
+  combines the previous memory snapshot with the masked current window.
+- Pre-ICU history consists of the lookback events and the most recent earlier
+  discharge summaries. ICU-Evo compresses it into its memory; the local-window
+  mode excludes it, and the full-history and RAG examples disable it as in the
+  paper.
+- Status is predicted for every labeled window. Recommendations are predicted
+  for reviewed windows after the first observation window with a positive
+  reference within `prediction.horizon_hours`, and scored against the current
+  window's references.
+- Full-history prompts of long stays can exceed `llm.max_input_tokens`; the
+  remaining windows of that stay are then recorded as failures.
+
+See [the evaluation protocol](docs/protocol.md) for exact masking, sampling,
+recovery, and scoring rules.
 
 ## Outputs and resume
 
 ```text
-runs/local/
+runs/rag_status/
 ├── run_config.json
 ├── predictions.jsonl
 ├── summary.json
@@ -152,7 +163,7 @@ runs/local/
 └── evaluation/
     ├── metrics.json
     ├── details.csv
-    └── matches.jsonl      recommendation matching cache
+    └── matches.jsonl      acute-problem or action matching cache
 ```
 
 Rerun the same command to resume. Completed prediction records, including
@@ -160,10 +171,9 @@ failures, and completed stay memories are retained. Use a new output directory
 when changing configuration or retrying failed predictions.
 
 To evaluate another model, write the standard
-[prediction JSONL format](docs/predictions.md), then call the evaluator. It needs
-only predictions, labels, and evaluation settings. To evaluate new K values
-without repeating action matching, use a new output directory and
-`--reuse-matches <previous-evaluation-directory>`.
+[prediction JSONL format](docs/predictions.md) and run Step 3. To rescore with
+another `evaluation.top_k_actions` without repeating action matching, use a new
+output directory and `--reuse-matches <previous-evaluation-directory>`.
 
 ## Configuration and repository layout
 
@@ -177,7 +187,7 @@ the same interfaces as the module commands above.
 agents/       ICU-Evo observations, reasoning, and memory
 experiments/  Memory/prediction runners and context construction
 dataset/      Published data loading and window construction
-evaluation/   Action matching and scoring
+evaluation/   Matching and scoring
 model/        Provider clients and text embeddings
 prompts/      Predictor, memory, and action-matcher prompts
 config/       Run examples, observation settings, and evaluation protocol
