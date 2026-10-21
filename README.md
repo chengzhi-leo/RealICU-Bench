@@ -8,6 +8,12 @@
 [![Website](https://img.shields.io/badge/🌐%20Project%20Website-4285F4?style=for-the-badge)](https://chengzhi-leo.github.io/RealICU-Bench/)
 [![Dataset](https://img.shields.io/badge/🗄️%20Dataset-Coming%20Soon-orange?style=for-the-badge)](https://github.com/chengzhi-leo/RealICU-Bench)
 
+<img src="docs/static/images/story_figure.jpg" alt="RealICU tasks: patient status, acute problems, recommended actions, and red flag actions from a long-context ICU data stream" width="75%"/>
+
+<p align="center"><em>ICU decisions are made under massive data volume and time pressure. An ICU AI co-pilot
+integrates evolving data streams into a decision-support panel that assesses Patient Status,
+identifies Acute Problems, proposes Recommended Actions, and warns against unsafe Red Flag actions.</em></p>
+
 </div>
 
 
