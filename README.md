@@ -6,7 +6,7 @@
 
 [![Paper](https://img.shields.io/badge/📄%20Paper-arXiv-red?style=for-the-badge)](http://arxiv.org/abs/2605.13542)
 [![Website](https://img.shields.io/badge/🌐%20Project%20Website-4285F4?style=for-the-badge)](https://chengzhi-leo.github.io/RealICU-Bench/)
-[![Dataset](https://img.shields.io/badge/🗄️%20Dataset-Coming%20Soon-orange?style=for-the-badge)](https://github.com/chengzhi-leo/RealICU-Bench)
+[![Dataset](https://img.shields.io/badge/🤗%20Dataset-Hugging%20Face-FFD21E?style=for-the-badge)](https://huggingface.co/datasets/leoshen/RealICU)
 
 <img src="docs/static/images/story_figure.jpg" alt="RealICU tasks: patient status, acute problems, recommended actions, and red flag actions from a long-context ICU data stream" width="75%"/>
 
@@ -57,10 +57,22 @@ are described in [configuration](docs/configuration.md).
 
 ## 2. Prepare the dataset
 
-RealICU uses MIMIC-IV derived data. To access it, visit PhysioNet, complete the
-[CITI training](https://www.citiprogram.org/), and request access to the MIMIC-IV
-database. After obtaining access, download the RealICU data and preserve this
-layout:
+RealICU is derived from MIMIC-IV and is distributed through PhysioNet as
+MIMIC-IV-Ext-RealICU under credentialed access: a credentialed PhysioNet account,
+completed [CITI training](https://www.citiprogram.org/), and a signed data use
+agreement. The PhysioNet release is under review; its link will be added here once
+it is published.
+
+The [Hugging Face repository](https://huggingface.co/datasets/leoshen/RealICU)
+hosts a synthetic sample of 5 patients with the same layout, schemas, and label
+format, and no patient data. Use it to inspect the format and test the pipeline,
+not to evaluate models. To run the examples on it, set `data.stay_ids` to `null`:
+
+```bash
+hf download leoshen/RealICU --repo-type dataset --local-dir data/realicu
+```
+
+Either way, preserve this layout:
 
 ```text
 data/realicu/
@@ -218,7 +230,7 @@ asset licenses.
 ```bibtex
 @article{shen2026realicu,
   title={RealICU: Do LLM Agents Understand Long-Context ICU Data? A Benchmark Beyond Behavior Imitation},
-  author={Shen, Chengzhi and Shen, Weixiang and Susetzky, Tobias and Li, Jun and Liu, Yuyuan and Zhang, Xuepeng and Gong, Zhenyu and Rueckert, Daniel and Pan, Jiazhen and others},
+  author={Shen, Chengzhi and Shen, Weixiang and Susetzky, Tobias and Chen, Chen (Cherise) and Li, Jun and Liu, Yuyuan and Zhang, Xuepeng and Gong, Zhenyu and Rueckert, Daniel and Pan, Jiazhen},
   journal={arXiv preprint arXiv:2605.13542},
   year={2026}
 }
